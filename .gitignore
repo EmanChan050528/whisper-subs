@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Packaging
+build/
+dist/
+*.spec
+
+# Media, models, outputs (keep test fixtures)
+samples/
+models/
+*.mp4
+*.mkv
+*.webm
+*.wav
+*.mp3
+*.m4a
+*.flac
+*.srt
+*.vtt
+*.ass
+*.whisper.json
+!tests/fixtures/**
+
+# Env
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

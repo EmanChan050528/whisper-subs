@@ -55,8 +55,92 @@ initialisation and cuDNN autotuning, so warm runs are the ones reported.
 3. Hugging Face symlink warnings on Windows are harmless (the cache just uses
    more disk). Silence them with `HF_HUB_DISABLE_SYMLINKS_WARNING=1`.
 
+## 2026-09-26: Japanese samples (same machine and stack)
+
+All runs: `--language ja`, fp16. Transcripts are saved to `samples/out/`,
+which is gitignored.
+
+| Sample | Length | Content | large-v3 RTF | turbo RTF |
+|---|---:|---|---:|---:|
+| `minute-sample.mp3` | 51 s | Prepared solo speech, clean | 11.5× | 45.0× |
+| `hour-sample.mp3` | 57.7 min | Two-person conversation, casual | **14.0×** (247 s) | **53.4×** (65 s) |
+| `song-sample.mp3` | 4.3 min | Vocaloid song (Hatsune Miku) | 19.1×\* | 67.9×\* |
+
+\* With VAD off. With VAD on, both models return **0 segments** for the song.
+
+### Accuracy: large-v3 beats turbo, so large-v3 is the default
+
+On the minute clip:
+
+| | large-v3 | large-v3-turbo |
+|---|---|---|
+| 今、日本の東京に | ✓ | 今日本の (lost the comma, which changes the reading) |
+| 三ヶ国語を喋れます | 三角語を喋れます | 三角語を**しております** |
+| 和歌にも見られる | ✓ | **若**にも |
+| これを見て | ✓ | **この世**を見て |
+| Errors in 51 s | 1 | 4 |
+
+On the hour clip, the two transcripts are almost identical line for line
+(1,194 against 1,210 segments, and 11,265 against 11,195 characters). Casual
+conversation is easy for both. Turbo's errors show up on less common words
+(和歌, 三ヶ国語), which is exactly where names and subject terms occur.
+
+**Decision:** `large-v3` is the default, with `large-v3-turbo` behind a `--fast`
+flag. A 1-hour file takes 4 minutes with large-v3, which is fine. The
+translation pass will take longer than that anyway.
+
+### Finding 1: Whisper doesn't punctuate conversation
+
+| | Segments ending in 。！？ | Sentence marks in the whole hour |
+|---|---:|---:|
+| large-v3 | 7 / 1,194 (1%) | 8 |
+| large-v3-turbo | 3 / 1,210 (0%) | 4 |
+
+The prepared speech in the minute clip was punctuated, although large-v3 still
+lost it partway through. The casual conversation was not punctuated at all.
+
+**This breaks jp-subs' main segmentation rule.** `segment.js` ends a unit at
+sentence-final punctuation. With Whisper output that rule almost never fires,
+so units would be cut only by the 2 s gap or the 64-character cap. Whisper's
+own segments are already short and pause-aligned (mean 2.1 s, with roughly
+one per utterance), which may be the better unit. **Step 3.2 has moved up into
+Milestone 1**, because it decides how cues are built.
+
+Options to measure:
+1. Treat each Whisper segment as ending a sentence, and use `segment.py` only
+   to merge very short fragments (for example そう, 外で).
+2. Prime with a punctuated `initial_prompt` so Whisper writes 。 again.
+3. Lower `gapMs` to about 500 to 800 ms and use word-level timings.
+
+### Finding 2: VAD deletes songs, and Whisper hallucinates credits
+
+- Silero VAD classes singing over music as non-speech, so it drops the whole
+  song. For music content, VAD has to be off or tuned: add a `--music` preset.
+- With VAD off, both models invent **作詞・作曲・編曲 初音ミク** (lyrics,
+  composition and arrangement credits) over the instrumental intro. Turbo does
+  it twice and adds an English phrase, "You are there". This is the phantom
+  text problem from Milestone 3.4, and credit lines belong on the blocklist
+  next to ご視聴ありがとうございました.
+- Both models also miss the first verse. Treat song lyrics as best effort, not
+  a supported case.
+
+### Finding 3: the Windows console can't print Japanese
+
+`print()` of Japanese raised `UnicodeEncodeError` (the console uses cp1252).
+The CLI has to call `sys.stdout.reconfigure(encoding="utf-8")`, as
+`gpu_check.py` now does.
+
+### Other notes
+
+- PyAV decoded mp3 fine with no system ffmpeg, including the whole hour in
+  2.2 s. mp4 and mkv are still untested.
+- Very short segments: 47 under 0.5 s with large-v3, and 61 with turbo. These
+  are single words like そう and 外で. They need merging or a minimum display
+  time (Milestone 3.3).
+- No ご視聴ありがとうございました hallucinations appeared in the hour of
+  conversation, with VAD on.
+
 ## To do
 
-- [ ] Re-run on real Japanese samples (Milestone 0.4). Record the RTF and
-      compare accuracy of `large-v3` and `large-v3-turbo`, because turbo is
-      reported to lose more on Japanese than on English.
+- [ ] Try mp4 and mkv input.
+- [ ] Measure options 1 to 3 from Finding 1 on the hour clip.

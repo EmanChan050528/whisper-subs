@@ -50,7 +50,7 @@ def run(model_name, audio, args):
         language=args.language,
         beam_size=5,
         word_timestamps=True,
-        vad_filter=True,
+        vad_filter=not args.no_vad,
         condition_on_previous_text=False,
     )
     # transcribe() is lazy: nothing is decoded until the generator is consumed.
@@ -74,7 +74,19 @@ def run(model_name, audio, args):
     }
 
 
+def save(r, args):
+    args.save.mkdir(parents=True, exist_ok=True)
+    suffix = "novad." if args.no_vad else ""
+    out = args.save / f"{args.audio.stem}.{r['model']}.{suffix}txt"
+    out.write_text(
+        "".join(f"[{s.start:8.2f} -> {s.end:8.2f}] {s.text.strip()}\n" for s in r["segments"]),
+        encoding="utf-8",
+    )
+
+
 def main():
+    # The Windows console defaults to cp1252 and cannot print Japanese.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     p.add_argument("audio", type=Path)
     p.add_argument("--models", nargs="+", default=["small", "medium", "large-v3-turbo", "large-v3"])
@@ -82,6 +94,10 @@ def main():
     p.add_argument("--compute-type", default="float16")
     p.add_argument("--language", default=None, help="e.g. ja; default auto-detects")
     p.add_argument("--show", type=int, default=3, help="segments of transcript to print")
+    p.add_argument("--no-vad", action="store_true",
+                   help="disable Silero VAD (it drops singing over music entirely)")
+    p.add_argument("--save", type=Path, metavar="DIR",
+                   help="write each full transcript to DIR/<file>.<model>.txt")
     args = p.parse_args()
 
     t0 = time.perf_counter()
@@ -99,6 +115,8 @@ def main():
             print(f"    FAILED: {type(err).__name__}: {err}\n")
             continue
         rows.append(r)
+        if args.save:
+            save(r, args)
         print(f"    language {r['language']} ({r['language_prob']:.2f}), "
               f"{len(r['segments'])} segments")
         for s in r["segments"][: args.show]:

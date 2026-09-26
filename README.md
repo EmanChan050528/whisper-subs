@@ -28,7 +28,7 @@ build plan.
 
 | Milestone | |
 |---|---|
-| 0. Setup and GPU check | ◐ GPU verified, samples pending |
+| 0. Setup and GPU check | ✅ |
 | 1. CLI MVP: audio in, Japanese `.srt` out | ☐ |
 | 2. Translation: port the jp-subs pipeline, English `.srt` | ☐ |
 | 3. Quality: eval, timing, glossary, long files | ☐ |

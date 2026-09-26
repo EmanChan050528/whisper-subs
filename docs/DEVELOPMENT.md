@@ -93,7 +93,11 @@ ffmpeg isn't installed on this machine, and it makes packaging much simpler.
       fallback only, for files PyAV can't open.
 
 ### 0.4 Test media
-- [ ] Put 3 or 4 clips in `samples/` (it is gitignored), about 2 to 10 minutes
+
+> **Done 2026-09-26** with 3 of 4: a minute of solo speech, a 1-hour two-person
+> conversation, and a song. There's no overlapping-speech clip yet. Results and
+> the choice of large-v3 as the default are in [benchmarks.md](benchmarks.md).
+- [x] Put 3 or 4 clips in `samples/` (it is gitignored), about 2 to 10 minutes
       each: one clean solo talker, one noisy stream with BGM, one with two
       speakers who overlap, and one long archive of at least an hour.
 - [ ] Bonus: a YouTube VOD that jp-subs already has a fixture for
@@ -126,15 +130,27 @@ written down.
 - [ ] Also save the raw Whisper output (`.whisper.json`) so later steps can be
       re-run without transcribing again.
 
+### 1.3b Cue boundaries (moved up from 3.2)
+Whisper leaves casual conversation almost entirely unpunctuated (1% of
+segments end in 。, see benchmarks.md), so `segment.js`'s punctuation rule
+won't fire.
+- [ ] Decide what a cue is: Whisper segment boundaries, a punctuated
+      `initial_prompt`, or word-gap splitting. Measure on the hour clip.
+- [ ] When writing `.ja.json`, consider marking the end of each Whisper segment
+      as a sentence end, so jp-subs' segmenter still has boundaries.
+
 ### 1.4 Japanese `.srt`
 - [ ] Port `srt.js` `timestamp()` and write one block per Whisper segment. This
       gives a quick check on transcription quality.
 
 ### 1.5 CLI
 ```
-whisper-subs input.mp4 [--model large-v3] [--device cuda|cpu] [--out DIR]
-                       [--ja-only]
+whisper-subs input.mp4 [--model large-v3] [--fast] [--device cuda|cpu] [--out DIR]
+                       [--ja-only] [--music]
 ```
+- [ ] `--fast` selects `large-v3-turbo`. `--music` turns VAD off, because VAD
+      drops sung vocals completely.
+- [ ] Print through UTF-8 stdout. The Windows console is cp1252.
 - [ ] Use `argparse`. Outputs go next to the input by default.
 
 ### 1.6 Interop check (the payoff)

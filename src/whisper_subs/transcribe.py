@@ -44,6 +44,10 @@ class Options:
     # repeat itself for minutes.
     condition_on_previous_text: bool = False
     initial_prompt: str | None = None
+    # Words Whisper should expect. Not set by the CLI: given a series' character
+    # names, Whisper recited the list over music in place of the real speech
+    # (see glossary.py). Kept for experiments.
+    hotwords: str | None = None
     # Whisper drops a whole 30 s window as silence when no_speech_prob exceeds
     # this AND the text's avg_logprob is below log_prob_threshold. None never
     # drops. faster-whisper's defaults are 0.6 and -1.0.
@@ -142,6 +146,7 @@ def transcribe(
         "word_timestamps": True,
         "condition_on_previous_text": opts.condition_on_previous_text,
         "initial_prompt": opts.initial_prompt,
+        "hotwords": opts.hotwords,
         "no_speech_threshold": opts.no_speech_threshold,
         "log_prob_threshold": opts.log_prob_threshold,
         "hallucination_silence_threshold": opts.hallucination_silence_threshold,

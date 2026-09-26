@@ -352,6 +352,35 @@ Whisper looped at 1,186 s. Nothing real was dropped.
 - Cost: transcription 223 s → 329 s (+47%), from the many small re-runs. On
   the game clip it cost about 25 s.
 
+### Glossary (3.5)
+
+**Hotwords, tried and rejected.** A glossary seeded from the clip's own pass-1
+names (ケンマシェ, コロンビーナ, サンドローネ, ファデュイ, アルレッキーノ…) was
+passed to Whisper as `hotwords`:
+
+| | No hotwords | Hotwords | Hotwords, recitations filtered |
+|---|---:|---:|---:|
+| Transcription time | 120 s | **383 s** | — |
+| Cues | 271 | 174 | 148 |
+| Cues over 10 s | 1 | **19** | 5 |
+| Low-confidence segments (logprob < -1) | 5 | 29 | — |
+| YouTube lines missed | 10% | 4% (inflated by long cues) | **28%** |
+| コロンビーナ spelled consistently | 11 of 12 | 24 of 24 | — |
+
+Whisper recited the list itself over music ("アルレッキーノ ファデュイ サンドローネ
+ファデュイ アルレッキーノ ロザリン" for 29 s), 21 times, instead of the speech
+underneath. Better name spelling isn't worth that, and pass 1 already repairs
+misheard names.
+
+**Seeding pass 1** is the part that works. Here is how コロンビーナ was
+translated on the 14 lines that contain it:
+
+| Run | Rendering |
+|---|---|
+| No glossary, run 1 | Colonnella ×14 |
+| No glossary, run 2 | Colonnibina ×14 |
+| `--glossary` with the entry hand-corrected to "Columbina" | **Columbina ×14** |
+
 ## To do
 
 - [ ] Re-run the Japanese RTF on real mp4/mkv downloads when available.

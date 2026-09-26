@@ -359,16 +359,27 @@ Whisper produces predictable junk on silence and music.
 - [ ] Test on a stream archive with a long BGM-only waiting screen. That's
       still the biggest risk with VAD off.
 
-### 3.5 Glossary per channel or series
-jp-subs keys glossaries by YouTube channel ID. Local files have no channel ID, so:
-- [ ] `--glossary NAME` uses `%APPDATA%/whisper-subs/glossaries/NAME.json`.
-      This is the same merge logic as `rememberChannelGlossary`: pass-1
-      findings are added, hand edits are never overwritten.
+### 3.5 Glossary per channel or series (`glossary.py`)
+jp-subs keys glossaries by YouTube channel ID. Local files have none, so the
+user names one.
+- [x] `--glossary NAME` uses `%APPDATA%/whisper-subs/glossaries/NAME.json`.
+      It seeds pass 1 (jp-subs' "ALREADY ESTABLISHED FOR THIS CHANNEL"), and
+      pass 1's findings are merged back, with **existing entries winning**, so
+      hand edits stick. Up to 40 entries per category, written atomically.
+- [x] Measured on `NSY6YHXbxtA`. Without a glossary, pass 1 renders
+      コロンビーナ differently on every run ("Colonnella", then "Colonnibina").
+      With a hand-corrected glossary it's **"Columbina" on all 14 lines**, and
+      the next merge left the correction alone.
+- [x] ~~Feed the names to Whisper as `hotwords`~~: **rejected.** Whisper
+      recited the name list over music as 30 s cues, *in place of* the speech,
+      and ran 3× slower (383 s, against 120 s). With the recitations filtered
+      out, 28% of YouTube's lines were missing, against 10% without hotwords.
+      Misheard names are left to pass 1's ASR corrections instead.
+      `Options.hotwords` stays for experiments.
 - [ ] Optionally infer the name from the parent folder (for example
-      `downloads/<streamer>/…`).
-- [ ] Feed the glossary names into Whisper's `hotwords` / `initial_prompt`, so
-      names are **recognised** correctly as well as translated consistently.
-      This is a new win jp-subs couldn't get.
+      `downloads/<streamer>/…`). Not done: an explicit name is clearer.
+- [ ] A way to see and edit a glossary without finding the file, perhaps in
+      the Milestone 4 GUI.
 
 ### 3.6 Long files
 - [ ] Transcribe in about 10-minute windows, cut at word gaps since VAD is

@@ -43,7 +43,14 @@ whisper-subs video.mp4 --ja-only     # Japanese only; no Ollama needed
 whisper-subs video.ja.json           # translate again without re-transcribing
 whisper-subs video.mp4 --fast        # large-v3-turbo: ~4x faster, weaker on rare words
 whisper-subs video.mp4 --limit 60    # translate only the first 60 cues, to try a model
+whisper-subs ep02.mp4 --glossary my-show   # keep names consistent across a series
 ```
+
+`--glossary NAME` remembers the names and terms each file's analysis finds, and
+gives them to the next file of the same series, so a character is translated
+the same way every episode. The glossary is a JSON file in
+`%APPDATA%/whisper-subs/glossaries/`. If a name comes out wrong, fix it there
+and the correction sticks, because existing entries always win.
 
 A 22-minute video takes about 4 minutes on an RTX 5070: 2 to transcribe, 2 to
 translate. Whisper and the LLM take turns on the GPU. See

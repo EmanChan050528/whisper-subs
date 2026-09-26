@@ -8,7 +8,7 @@ from dataclasses import asdict
 from datetime import UTC, datetime
 from pathlib import Path
 
-from whisper_subs import __version__
+from whisper_subs import __version__, glossary
 from whisper_subs.cues import to_transcript
 from whisper_subs.ollama import DEFAULT_MODEL as DEFAULT_LLM
 from whisper_subs.srt import cues_to_srt, units_to_srt
@@ -20,7 +20,7 @@ from whisper_subs.transcribe import DEFAULT_MODEL, FAST_MODEL, Options
 CACHE_KEYS = ("model", "language", "beam_size", "vad", "vad_threshold",
               "condition_on_previous_text", "initial_prompt", "no_speech_threshold",
               "log_prob_threshold", "hallucination_silence_threshold", "gap_fill",
-              "gap_fill_vad_threshold", "gap_fill_min_s")
+              "gap_fill_vad_threshold", "gap_fill_min_s", "hotwords")
 
 
 def parse_args(argv):
@@ -34,6 +34,11 @@ def parse_args(argv):
                    help="video or audio file (mp4, mkv, mp3, wav, ...) or a .ja.json transcript")
     p.add_argument("--out", type=Path, default=None,
                    help="output directory (default: beside the input)")
+    p.add_argument("--glossary", metavar="NAME", default=None,
+                   help="a glossary shared by files of one channel or series: it keeps "
+                        "names and terms translated the same way every time, and each run "
+                        "adds what it finds. Stored in "
+                        "%%APPDATA%%/whisper-subs/glossaries/NAME.json; edit freely")
 
     w = p.add_argument_group("transcription")
     w.add_argument("--model", default=None, help=f"Whisper model (default {DEFAULT_MODEL})")
@@ -186,7 +191,8 @@ def translate_step(transcript: dict, out_dir: Path, stem: str, args) -> int:
     print(f"\ntranslating with {args.llm_model} (gap {gap_ms} ms)")
     started = time.perf_counter()
     result = run(transcript, ollama_backend(model=args.llm_model), options,
-                 log=lambda m: print(f"  {m}", flush=True))
+                 log=lambda m: print(f"  {m}", flush=True),
+                 seed=glossary.seed(args.stored_glossary) if args.stored_glossary else None)
     seconds = time.perf_counter() - started
 
     units, translations = result["units"], result["translations"]
@@ -212,6 +218,10 @@ def translate_step(transcript: dict, out_dir: Path, stem: str, args) -> int:
         written.append(both)
 
     print(f"\n  {result['translated']}/{len(units)} units translated in {seconds:.0f}s")
+    if args.glossary and result["glossary"]:
+        where, added = glossary.remember(args.glossary, result["glossary"], source=stem)
+        print(f"  glossary '{args.glossary}': {added} new entr{'y' if added == 1 else 'ies'}, "
+              f"{where}")
     if result["failures"]:
         print(f"\n  {len(result['failures'])} problem(s):")
         for f in result["failures"]:
@@ -232,6 +242,16 @@ def main(argv: list[str] | None = None) -> int:
     if not src.is_file():
         print(f"error: no such file: {src}", file=sys.stderr)
         return 1
+    args.stored_glossary = None
+    if args.glossary:
+        try:
+            args.stored_glossary = glossary.load(args.glossary)
+        except (ValueError, json.JSONDecodeError) as err:
+            print(f"error: glossary: {err}", file=sys.stderr)
+            return 1
+        known = len(args.stored_glossary["names"]) + len(args.stored_glossary["terms"])
+        print(f"glossary '{args.glossary}': {known} entries from "
+              f"{args.stored_glossary.get('files', 0)} earlier file(s)")
     from_json = src.name.endswith(".ja.json")
     if from_json and args.ja_only:
         print("error: --ja-only with a .ja.json input leaves nothing to do", file=sys.stderr)

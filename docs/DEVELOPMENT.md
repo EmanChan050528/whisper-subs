@@ -87,8 +87,8 @@ only supports it in recent CUDA 12.8+ builds.
 faster-whisper decodes through **PyAV**, which bundles FFmpeg's libraries, so
 mp4, mkv and mp3 files work **without a system ffmpeg**. That matters because
 ffmpeg isn't installed on this machine, and it makes packaging much simpler.
-- [x] Use `faster_whisper.decode_audio()` first. Confirmed: it decoded a WAV
-      with no system ffmpeg. Still to check on mp4 and mkv with real samples.
+- [x] Use `faster_whisper.decode_audio()` first. Confirmed on wav, mp3, mp4
+      and mkv with no system ffmpeg.
 - [ ] Keep the ffmpeg CLI (`winget install Gyan.FFmpeg`) as an optional
       fallback only, for files PyAV can't open.
 
@@ -100,8 +100,9 @@ ffmpeg isn't installed on this machine, and it makes packaging much simpler.
 - [x] Put 3 or 4 clips in `samples/` (it is gitignored), about 2 to 10 minutes
       each: one clean solo talker, one noisy stream with BGM, one with two
       speakers who overlap, and one long archive of at least an hour.
-- [ ] Bonus: a YouTube VOD that jp-subs already has a fixture for
-      (`EmteTL5Ij8g` 30 to 40 min, `NSY6YHXbxtA`). Then Whisper can be compared
+- [x] Bonus: a YouTube VOD that jp-subs already has a fixture for
+      (`NSY6YHXbxtA` is `samples/clip-sample.mp3`; `EmteTL5Ij8g` was too long to
+      download). Then Whisper can be compared
       against YouTube ASR on the same speech, with a scored English reference.
 
 **Done when** `large-v3` transcribes a 30 s clip on the GPU and the RTF is
@@ -111,55 +112,86 @@ written down.
 
 ## Milestone 1: CLI MVP, audio in and Japanese `.srt` out
 
+> **Built 2026-09-26.** `whisper-subs input.mp4` writes `.ja.srt`, `.ja.json`
+> and `.whisper.json`. jp-subs translates the `.ja.json` unchanged, and the
+> subtitles play in sync in VLC.
+> Measurements are in [benchmarks.md](benchmarks.md#2026-09-26-milestone-1-cue-boundaries-and-vad).
+
 ### 1.1 `audio.py`
-- [ ] `load(path) -> np.ndarray` at 16 kHz mono, through `decode_audio`.
-- [ ] Give a clear error for files with no audio stream.
+- [x] `load(path) -> np.ndarray` at 16 kHz mono, through `decode_audio`.
+- [x] Give a clear error for files with no audio stream. Tested with a
+      video-only mp4.
+- [x] mp3, wav, mp4 (mpeg4 and AAC) and mkv (Opus) all decode with no system
+      ffmpeg.
 
 ### 1.2 `transcribe.py`
-- [ ] Call `WhisperModel.transcribe(audio, language="ja", word_timestamps=True, vad_filter=True, beam_size=5)`.
-- [ ] Make `condition_on_previous_text=False` the default. With it on, Whisper
-      tends to loop and repeat hallucinations on long, noisy streams.
-- [ ] Stream the segments generator so progress shows while it runs. Use
-      `info.duration` for the percentage.
+- [x] `word_timestamps=True`, `beam_size=5`, `condition_on_previous_text=False`.
+- [x] **VAD is off by default** (opt in with `--vad` and `--vad-threshold`). On
+      `NSY6YHXbxtA`, VAD made Whisper miss 43% of the lines YouTube's captions
+      have, against 22% without it. Without VAD the hour clip gained only real
+      interjections and no hallucinations. This makes the 3.4 hallucination
+      guards more important.
+- [x] Stream the segments generator and show progress as a percentage of the
+      audio's duration.
+- [x] Free the model (`del` and `gc.collect()`) as soon as transcription ends.
 
 ### 1.3 Write `.ja.json` in jp-subs format
-- [ ] One cue per Whisper segment: `t_ms`, `dur_ms`, `ja`, and `segs` built
-      from words.
-- [ ] Top-level fields: `title` (the file stem), `duration_s`,
-      `source: "whisper <model>"`, `cue_count`.
-- [ ] Also save the raw Whisper output (`.whisper.json`) so later steps can be
-      re-run without transcribing again.
+- [x] One cue per Whisper segment: `t_ms`, `dur_ms`, `ja`, and `segs` built
+      from words. `ja` always equals the concatenated `segs`.
+- [x] Top-level fields: `title`, `duration_s`, `source`, `captured_at`,
+      `cue_count`.
+- [x] Save the raw Whisper output (`.whisper.json`). It's reused if the source
+      file (name, size and mtime) and every option that affects output are
+      unchanged. `--force` redoes it.
 
 ### 1.3b Cue boundaries (moved up from 3.2)
-Whisper leaves casual conversation almost entirely unpunctuated (1% of
-segments end in 。, see benchmarks.md), so `segment.js`'s punctuation rule
-won't fire.
-- [ ] Decide what a cue is: Whisper segment boundaries, a punctuated
-      `initial_prompt`, or word-gap splitting. Measure on the hour clip.
-- [ ] When writing `.ja.json`, consider marking the end of each Whisper segment
-      as a sentence end, so jp-subs' segmenter still has boundaries.
+Decided and measured:
+- [x] **Split segments where words are more than 1.0 s apart.** Whisper
+      sometimes pins a segment's first word tens of seconds before the rest
+      (「え?」 at 160.9 s and the rest at 204.3 s). Cue times now come from word
+      times, not segment times. This took the clip's units over 10 s from 13
+      down to 1 (at a 400 ms gap).
+- [x] ~~Punctuated `initial_prompt`~~: **rejected.** On the hour clip, units
+      ending in punctuation only went from 8 to 16.
+- [x] ~~Append 。 at the end of each segment~~: **not done.** The `.ja.json`
+      stays faithful to what Whisper produced. Boundaries are the segmenter's
+      job.
+- [x] **The M2 `segment.py` needs `gapMs ≈ 500` for Whisper input**, against
+      2000 for YouTube. At 500 ms, the mean unit length is 14.5 chars on the
+      clip and 15.3 on the hour. YouTube's baseline is 13.6, and 2000 ms gives
+      42.6 on the hour. Record this as a Whisper preset, not a changed default.
 
 ### 1.4 Japanese `.srt`
-- [ ] Port `srt.js` `timestamp()` and write one block per Whisper segment. This
-      gives a quick check on transcription quality.
+- [x] Port `timestamp()`. One block per cue, stretched to at least 700 ms but
+      never into the next cue.
 
 ### 1.5 CLI
 ```
-whisper-subs input.mp4 [--model large-v3] [--fast] [--device cuda|cpu] [--out DIR]
-                       [--ja-only] [--music]
+whisper-subs input.mp4 [--model M | --fast] [--device auto|cuda|cpu]
+                       [--compute-type T] [--vad [--vad-threshold X]]
+                       [--prompt TEXT] [--out DIR] [--force] [--ja-only]
 ```
-- [ ] `--fast` selects `large-v3-turbo`. `--music` turns VAD off, because VAD
-      drops sung vocals completely.
-- [ ] Print through UTF-8 stdout. The Windows console is cp1252.
-- [ ] Use `argparse`. Outputs go next to the input by default.
+- [x] `--fast` selects `large-v3-turbo`. `--music` was dropped because VAD is
+      off by default.
+- [x] UTF-8 stdout and stderr (the Windows console is cp1252).
+- [x] `argparse`, with outputs next to the input by default.
 
 ### 1.6 Interop check (the payoff)
-- [ ] Run jp-subs' `jpsub.js segment` and then `translate` on the `.ja.json`.
-      This is English subtitles from a local file, with no new translation code.
+- [x] jp-subs' `segment.js` reads our `.ja.json` unchanged.
+- [x] `jpsub.js translate` on the first 60 cues of `NSY6YHXbxtA`: 28 of 28
+      units in 14.6 s on `qwen3.5:9b`, and pass 1 found 5 names, 5 terms and
+      2 ASR corrections. That's English subtitles from a local file with no new
+      translation code. Two issues showed, both covered later:
+      - Units run up to 16 s and 3 lines, because of the 2 s gap. See 1.3b and
+        M2.
+      - A name comes out two ways (コロンビーナ and コロヴィーナ). Glossary
+        hotwords (3.5) are the fix.
 
 **Done when** `whisper-subs sample.mp4 --ja-only` writes a `.ja.srt` that plays
 in sync in mpv or VLC, and `jpsub.js translate` accepts the `.ja.json`
 unchanged.
+- [x] **Watch one `.ja.srt` in a player.** Checked 2026-09-26 in VLC on
+      `NSY6YHXbxtA`: the timing works well.
 
 ---
 
@@ -171,7 +203,8 @@ unchanged.
        and `temperature=0.2`. Port every error message, because they came from
        real failures. Port `parse_json` too, including the tail-of-reply error.
 2. [ ] `chunk.py`
-3. [ ] `segment.py`
+3. [ ] `segment.py`, with a Whisper preset of `gapMs≈500` (see 1.3b). Keep
+       2000 as the default so the parity tests still match jp-subs.
 4. [ ] `prompt.py`: copy the text exactly and diff it against the JS output.
 5. [ ] `pipeline.py`: `analyse` (sample down to 6000 chars, retry 3 times, loud
        warning when the glossary is empty) and `translate_units` (retry only the
@@ -239,6 +272,8 @@ Whisper's output isn't shaped like YouTube's, so check both assumptions:
 
 ### 3.4 Hallucination guards
 Whisper produces predictable junk on silence and music.
+- [ ] **More urgent now that VAD is off by default (1.2).** Test on a stream
+      archive with a long BGM-only waiting screen.
 - [ ] Drop segments with `no_speech_prob > 0.6` and a low `avg_logprob`.
 - [ ] Drop or collapse repeated lines, meaning the same text 3 or more times in
       a row.
@@ -259,8 +294,9 @@ jp-subs keys glossaries by YouTube channel ID. Local files have no channel ID, s
       This is a new win jp-subs couldn't get.
 
 ### 3.6 Long files
-- [ ] Transcribe in about 10-minute windows (VAD-aligned) and checkpoint each
-      one to `.whisper.json`, so a crash at 3 hours doesn't lose everything.
+- [ ] Transcribe in about 10-minute windows, cut at word gaps since VAD is
+      off. Checkpoint each one to `.whisper.json`, so a crash at 3 hours
+      doesn't lose everything.
 - [ ] Add `--resume`, which skips windows and translation chunks already done.
 - [ ] Show progress with `tqdm` (percent of audio, then chunks).
 

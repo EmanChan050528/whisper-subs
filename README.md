@@ -29,10 +29,26 @@ build plan.
 | Milestone | |
 |---|---|
 | 0. Setup and GPU check | ✅ |
-| 1. CLI MVP: audio in, Japanese `.srt` out | ☐ |
+| 1. CLI MVP: audio in, Japanese `.srt` out | ✅ |
 | 2. Translation: port the jp-subs pipeline, English `.srt` | ☐ |
 | 3. Quality: eval, timing, glossary, long files | ☐ |
 | 4. GUI and packaging | ☐ |
+
+## Usage (so far)
+
+```bash
+whisper-subs video.mp4            # writes video.ja.srt, video.ja.json, video.whisper.json
+whisper-subs video.mp4 --fast     # large-v3-turbo: about 4x faster, weaker on rare words
+whisper-subs stream.mkv --vad     # skip non-speech; can drop quiet or background speech
+```
+
+The English translation isn't built in yet (Milestone 2). Until it is,
+[jp-subs](https://github.com/EmanChan050528/jp-subs) can translate the
+`.ja.json` directly:
+
+```bash
+node <jp-subs>/core/bin/jpsub.js translate video.ja.json
+```
 
 ## Requirements
 

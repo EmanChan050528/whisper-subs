@@ -140,7 +140,90 @@ The CLI has to call `sys.stdout.reconfigure(encoding="utf-8")`, as
 - No ご視聴ありがとうございました hallucinations appeared in the hour of
   conversation, with VAD on.
 
+## 2026-09-26: Milestone 1, cue boundaries and VAD
+
+`NSY6YHXbxtA` is now in the samples as `clip-sample.mp3` (1,312 s). jp-subs
+has YouTube's own ASR transcript of it (`eval/fixtures/NSY6YHXbxtA_full.ja.json`),
+so for the first time Whisper can be compared with YouTube's captions on the
+same speech. Coverage is measured with `eval/coverage.py`, and units with
+jp-subs' own `segment.js`.
+
+### VAD loses a lot of speech, so it's now off by default
+
+A YouTube line counts as "missed" if no Whisper cue overlaps it in time.
+
+| Setting | Whisper cues | YouTube lines missed | Characters missed | Whisper-only lines |
+|---|---:|---:|---:|---:|
+| VAD on (threshold 0.5) | 185 | 86 / 200 (43%) | 39% | 53 |
+| VAD threshold 0.25 | 223 | 61 (30%) | 30% | 57 |
+| VAD threshold 0.1 | 206 | 74 (37%) | 36% | 58 |
+| **VAD off** | **241** | **43 (22%)** | **19%** | 64 |
+
+- The missed lines are mostly quiet in-game voice acting under the streamer's
+  voice, for example 84 to 109 s: やっぱり間に合わなかったのかな,
+  名前を教えてくれる?
+- Lowering the threshold doesn't behave predictably: 0.1 did worse than 0.25,
+  because the chunking changes what Whisper decodes. Only turning VAD off
+  helped reliably.
+- The "Whisper-only" lines are mostly **real** game dialogue that YouTube's
+  captions miss (時間とともに変化していく…). YouTube isn't ground truth.
+- **Hour clip, VAD off:** 1,240 against 1,194 segments. There were no phantom
+  phrases, no repeated lines, and nothing with a high `no_speech_prob` or
+  compression ratio. The 23 new cues are all short real interjections
+  (そう, まあね, ありがとうございます, …). Speed was the same.
+- **Risk:** long silence or music with VAD off is where Whisper invents text
+  (the song's credit lines). The Milestone 3.4 guards have to cover this, and
+  `--vad` is still available.
+
+### Whisper segments sometimes have wrong times
+
+A segment can pin its first word far away from the rest. For example, the
+segment 「え?俺じゃないって言った」 runs from 160.6 to 205.9 s, with 「え?」 at
+160.9 s and 「俺」 at **204.3 s**. As a subtitle it would appear 45 s early and
+stay up for 45 s. The clip had 13 segments over 10 s, and the longest was
+80 s. **Fix:** `cues.py` splits segments where words are more than 1.0 s apart,
+and times every cue from its words.
+
+### Cue boundaries
+
+jp-subs' `segment.js` merges cues into translation units until it sees
+sentence-final punctuation, a silence of `gapMs` or longer, or 64 characters.
+Whisper barely punctuates, so the gap does all the work:
+
+| Input | gapMs | Units | Mean chars | ≥ 60 chars (cut mid-sentence) | Units > 10 s |
+|---|---:|---:|---:|---:|---:|
+| YouTube ASR, NSY6YHXbxtA (baseline) | 2000 | 235 | 13.6 | 2 | 14 |
+| Whisper, clip (VAD off) | 2000 | 108 | 22.5 | 7 | 16 |
+| Whisper, clip (VAD off) | **500** | 167 | **14.5** | 2 | 5 |
+| Whisper, hour (VAD off) | 2000 | 263 | 42.6 | 57 | 162 |
+| Whisper, hour (VAD off) | **500** | 732 | **15.3** | 3 | 26 |
+
+- **A punctuated `initial_prompt` didn't help.** Units ending in punctuation
+  went from 8 to 16 on the hour clip, and from 11 to 27 on the clip.
+- **Decision:** the `.ja.json` stays faithful to Whisper. The Python
+  `segment.py` (M2) gets a Whisper preset with `gapMs≈500`. Until then, jp-subs'
+  CLI works on our files but produces long units, because it uses 2000.
+
+### jp-subs interop
+
+`node jpsub.js translate clip-sample.ja.json --limit 60` translated 28 of 28
+units in 14.6 s on `qwen3.5:9b`, and pass 1 found 5 names, 5 terms and 2 ASR
+corrections. The translations read well. The problems are the long units (up
+to 16 s and 3 lines) and one name that Whisper spells two ways (コロンビーナ and
+コロヴィーナ).
+
+**Start Ollama through the app, not with `ollama serve` from a shell.** A bare
+`ollama serve` started from Git Bash listed **no models**, because the app sets
+the model location itself.
+
+### Container checks
+
+mp4 (mpeg4 video and AAC) and mkv (mpeg4 and Opus) test files, built from the
+minute clip, both transcribe fine. A video-only mp4 gives
+`error: silent.mp4 has no audio stream.`
+
 ## To do
 
-- [ ] Try mp4 and mkv input.
-- [ ] Measure options 1 to 3 from Finding 1 on the hour clip.
+- [ ] Re-run the Japanese RTF on real mp4/mkv downloads when available.
+- [ ] Test VAD-off hallucinations on a stream archive with a long waiting
+      screen or BGM-only section.

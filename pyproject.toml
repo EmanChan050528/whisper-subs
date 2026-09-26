@@ -33,3 +33,5 @@ testpaths = ["tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "UP", "B", "RUF"]
+# Full-width Japanese punctuation (．！？「」) is intentional throughout.
+ignore = ["RUF001", "RUF002", "RUF003"]

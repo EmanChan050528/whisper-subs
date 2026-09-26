@@ -30,25 +30,31 @@ build plan.
 |---|---|
 | 0. Setup and GPU check | ✅ |
 | 1. CLI MVP: audio in, Japanese `.srt` out | ✅ |
-| 2. Translation: port the jp-subs pipeline, English `.srt` | ☐ |
+| 2. Translation: port the jp-subs pipeline, English `.srt` | ✅ |
 | 3. Quality: eval, timing, glossary, long files | ☐ |
 | 4. GUI and packaging | ☐ |
 
-## Usage (so far)
+## Usage
 
 ```bash
-whisper-subs video.mp4            # writes video.ja.srt, video.ja.json, video.whisper.json
-whisper-subs video.mp4 --fast     # large-v3-turbo: about 4x faster, weaker on rare words
-whisper-subs stream.mkv --vad     # skip non-speech; can drop quiet or background speech
+whisper-subs video.mp4               # video.en.srt, plus video.ja.srt and video.ja.json
+whisper-subs video.mp4 --bilingual   # also video.ja-en.srt (Japanese above English)
+whisper-subs video.mp4 --ja-only     # Japanese only; no Ollama needed
+whisper-subs video.ja.json           # translate again without re-transcribing
+whisper-subs video.mp4 --fast        # large-v3-turbo: ~4x faster, weaker on rare words
+whisper-subs video.mp4 --limit 60    # translate only the first 60 cues, to try a model
 ```
 
-The English translation isn't built in yet (Milestone 2). Until it is,
-[jp-subs](https://github.com/EmanChan050528/jp-subs) can translate the
-`.ja.json` directly:
+A 22-minute video takes about 4 minutes on an RTX 5070: 2 to transcribe, 2 to
+translate. Whisper and the LLM take turns on the GPU. See
+[docs/benchmarks.md](docs/benchmarks.md).
 
-```bash
-node <jp-subs>/core/bin/jpsub.js translate video.ja.json
-```
+The translation pipeline is a Python port of
+[jp-subs](https://github.com/EmanChan050528/jp-subs), tested byte for byte
+against the original. It adds one fix of its own. The model copies each
+Japanese line before translating it, which stops translations sliding onto
+neighbouring lines in fragmented conversation, and lets a mismatched copy be
+caught and retried.
 
 ## Requirements
 

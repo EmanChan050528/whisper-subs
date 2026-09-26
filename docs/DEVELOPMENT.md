@@ -197,50 +197,101 @@ unchanged.
 
 ## Milestone 2: translation, ported into Python
 
-### 2.1 Port in dependency order, with a test for each module
-1. [ ] `ollama.py`: `chat(prompt, json=True)` over `urllib` or `httpx` to
-       `/api/chat`. Keep `think=False`, `num_ctx=16384`, `num_predict=8192`
-       and `temperature=0.2`. Port every error message, because they came from
-       real failures. Port `parse_json` too, including the tail-of-reply error.
-2. [ ] `chunk.py`
-3. [ ] `segment.py`, with a Whisper preset of `gapMs≈500` (see 1.3b). Keep
-       2000 as the default so the parity tests still match jp-subs.
-4. [ ] `prompt.py`: copy the text exactly and diff it against the JS output.
-5. [ ] `pipeline.py`: `analyse` (sample down to 6000 chars, retry 3 times, loud
-       warning when the glossary is empty) and `translate_units` (retry only the
-       missing lines, `on_progress`).
-6. [ ] `srt.py`: `wrap` (42 chars, 3 lines) and `to_srt` (700 ms minimum dwell).
+> **Built 2026-09-26.** `whisper-subs video.mp4` goes from video to English
+> `.srt` in one command. `NSY6YHXbxtA` (22 min) took 3¼ min end to end. The
+> port matches jp-subs byte for byte on 5 fixtures × 2 presets. Measurements
+> are in [benchmarks.md](benchmarks.md#2026-09-26-milestone-2-translation).
 
-### 2.2 Parity tests (`tests/parity/`)
-- [ ] Copy `eval/fixtures/*.ja.json` from jp-subs into `tests/fixtures/`.
-- [ ] Add a small Node script that dumps `segment()`, `chunk()` and both
-      prompts to JSON for each fixture. pytest checks that the Python output
-      matches it exactly.
-- [ ] Port `srt-parse.test.mjs` and `glossary-apply.test.mjs` as pytest tests.
+### 2.1 Port in dependency order, with a test for each module
+1. [x] `ollama.py`: `urllib` only. `think=False`, `num_ctx=16384`,
+       `num_predict=8192`, `temperature=0.2`, and every jp-subs error message.
+       Plus `parse_json` with the tail-of-reply error, `check_model()` (a
+       preflight before transcription) and `unload()`.
+2. [x] `chunk.py`
+3. [x] `segment.py`, with a `WHISPER` preset: `gap_ms=500` and
+       `cue_end_min_chars=8` (a new option, see 2.5). The defaults are
+       jp-subs'.
+4. [x] `prompt.py`: text kept verbatim, including the JS `${...}` placeholders,
+       which are filled in one pass.
+5. [x] `pipeline.py`: `analyse` and `translate_units`, with retries,
+       `should_stop` and `on_progress`.
+6. [x] `srt.py`: `wrap` and `units_to_srt`.
+7. [x] `_js.py`: the JS semantics a byte-for-byte port needs. `js_len` counts
+       UTF-16 units (𠮷 is 2) and `js_round` rounds halves up. The sentence
+       split also emulates a variable-width lookbehind that Python's `re`
+       doesn't have.
+
+### 2.2 Parity tests (`tests/parity/`, `tests/test_parity.py`)
+- [x] Fixtures: jp-subs' two YouTube transcripts, our Whisper transcript of
+      `NSY6YHXbxtA`, a synthetic 3× long file (for pass-1 sampling) and an
+      edge-case file (closing brackets, 「!!」, 𠮷, tag-only cues, rounding).
+- [x] `dump.mjs` runs jp-subs' **real** `segment`, `chunk`, `run` and `toSrt`
+      with a deterministic fake model, which replies uselessly and then
+      fenced on pass 1, drops lines to force retries, never answers some
+      lines, and wraps some replies in prose. The goldens are committed, so
+      the tests need neither Node nor jp-subs.
+- [x] pytest compares units, chunks, every log line, every prompt (by hash,
+      with a readable diff of the first of each kind), translations, failures
+      and the `.srt`: 31 checks.
+- [x] Checked that the tests actually fail: a one-space prompt edit failed 10,
+      and UTF-16 length semantics failed 4. One deliberate mutant (splitting
+      only at 。 and not after 」) survived, because it produces the same units
+      on every input.
+- [x] ~~Port `srt-parse.test.mjs`~~: not needed, because this project never
+      reads `.srt` input. `glossary-apply` moves to 3.5 with the glossary.
 
 ### 2.3 Wire it in
-- [ ] Default pipeline: transcribe, then segment, then pass 1, then pass 2,
+- [x] Default pipeline: preflight Ollama, transcribe, segment, pass 1, pass 2,
       then write `.en.srt`, `.en.json` and `.ja.srt`.
-- [ ] **Free the VRAM between stages.** `large-v3` (about 3 to 4 GB in fp16)
-      and `qwen3.5:9b` (6.6 GB) together are close to the 12 GB limit. Delete
-      the Whisper model and call `gc.collect()` before pass 1 starts.
-- [ ] New flags: `--llm-model qwen3.5:9b`, `--size`, `--context-before`,
-      `--context-after`, `--limit`, `--bilingual`.
-- [ ] `--from-json video.ja.json` skips transcription, for re-running
-      translation cheaply.
+- [x] **Free the VRAM between stages.** Whisper's real peak is **~10 GB**
+      during transcription, not the ~4 GB measured after loading, so it can't
+      share the card with `qwen3.5:9b` (~9 GB at 16k context). An LLM left over
+      from an earlier run is unloaded before transcription, and Whisper is
+      freed before pass 1. Checked with an `nvidia-smi` trace.
+- [x] Flags: `--llm-model`, `--size`, `--context-before`, `--context-after`,
+      `--limit`, `--bilingual` and `--gap-ms`.
+- [x] ~~`--from-json`~~: passing a `.ja.json` as the input translates it
+      directly. That works for our own output or for a jp-subs transcript,
+      which gets jp-subs' defaults.
 
 ### 2.4 Bilingual `.srt`
-- [ ] Put Japanese on line 1 and English below it in each block. Wrap only the
-      English.
+- [x] `.ja-en.srt`: Japanese on the first line, wrapped English below.
+
+### 2.5 Line-shift bug, found on the first full run
+The model put translations under the wrong line numbers, shifted by 1 to 3
+lines, and a subtitle file like that is worse than none. The model rebuilds
+whole sentences from fragmented lines and then spreads the English back
+across the numbers, putting the spill-over under the next number. This
+happened in **5 of 6 runs** on the clip's chunk 1 and **3 of 3** on the hour
+clip's chunk 34. Two fixes, both measured:
+- [x] **Segmentation:** the `WHISPER` preset ends a unit at a Whisper segment
+      boundary once the unit has 8 or more characters (`cue_end_min_chars`).
+      Shorter fragments (そう, 外で) still merge. The clip's chunk 1 went from
+      5 of 6 shifted to 0 of 12, but the hour clip, casual conversation made
+      of short fragments, still shifted.
+- [x] **Copy-then-translate replies (`echo`):** the model returns
+      `{"n": {"ja": "<the line, copied>", "en": "..."}}`. Writing the source
+      line immediately before its English anchors the translation, and a copy
+      that doesn't match its line (`echo_matches`, ≥ 0.7 similarity) is
+      rejected and retried. The hour clip's chunk 34 went from **3 of 3
+      shifted to 3 of 3 aligned**, and the stress case (clip chunk 1 on the
+      old segmentation) from 1 of 3 to 0 of 3. Fragments are now translated
+      as fragments ("having a lot of it was / thought to be a bad thing.").
+      The CLI turns it on, and parity tests still cover jp-subs' plain format.
+- [ ] 3.1 still needs an alignment check in the eval, so a regression shows
+      up in the numbers. Worth porting `echo` back to jp-subs.
 
 **Done when** one command turns `sample.mp4` into an English `.srt`, and the
-parity tests pass on both jp-subs fixtures.
+parity tests pass on both jp-subs fixtures. **Met.**
 
 ---
 
 ## Milestone 3: quality
 
 ### 3.1 Evaluation harness (build this before tuning anything)
+- [ ] **Alignment check** (from 2.5): flag translated lines that plausibly
+      belong to a neighbour. The line-shift bug is invisible in every other
+      metric.
 - [ ] `eval/` with a `score.py` that reports: cue count, mean and max
       chars/cue, how many cues exceed 17 chars/sec (reading speed), how many
       are shorter than 700 ms or longer than 7 s, and gaps under 80 ms.

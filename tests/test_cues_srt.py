@@ -61,3 +61,19 @@ def test_srt_stretches_short_cues_but_not_into_the_next():
     assert "00:00:01,000 --> 00:00:01,400\n外で" in srt
     assert "00:00:01,400 --> 00:00:03,400\n家でゲームしたり" in srt
     assert srt.startswith("1\n") and "\n3\n" in srt
+
+
+def test_whisper_preset_ends_units_at_cue_ends_but_merges_short_fragments():
+    from whisper_subs.segment import WHISPER, segment
+
+    cues = [  # back to back, so the gap rule never fires
+        {"t_ms": 0, "dur_ms": 2000, "ja": "人生という長い旅路の中では"},
+        {"t_ms": 2000, "dur_ms": 900, "ja": "その人たちが"},       # 6 chars: merges on
+        {"t_ms": 2900, "dur_ms": 1500, "ja": "違う名前で呼んだとしても"},
+        {"t_ms": 4400, "dur_ms": 300, "ja": "そう"},
+    ]
+    # jp-subs' default: no punctuation and no gap, so it all becomes one unit.
+    assert [u["ja"] for u in segment(cues)] == [
+        "人生という長い旅路の中ではその人たちが違う名前で呼んだとしてもそう"]
+    assert [u["ja"] for u in segment(cues, WHISPER)] == [
+        "人生という長い旅路の中では", "その人たちが違う名前で呼んだとしても", "そう"]

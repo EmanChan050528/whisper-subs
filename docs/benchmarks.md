@@ -222,8 +222,78 @@ mp4 (mpeg4 video and AAC) and mkv (mpeg4 and Opus) test files, built from the
 minute clip, both transcribe fine. A video-only mp4 gives
 `error: silent.mp4 has no audio stream.`
 
+## 2026-09-26: Milestone 2, translation
+
+Stack: `qwen3.5:9b` on Ollama 0.33.3 (`num_ctx` 16384, `think` off,
+temperature 0.2), with large-v3 for transcription. Everything runs on the
+RTX 5070.
+
+### End to end
+
+| Input | Transcribe | Units | Translate | Total | Lines translated |
+|---|---:|---:|---:|---:|---:|
+| minute (51 s) | 10 s | 7 | 18 s | ~30 s | 7 / 7 |
+| `NSY6YHXbxtA` (22 min) | 117 s | 220 | 118 s | ~4 min | 220 / 220 |
+| hour (57.7 min, from `.ja.json`) | (cached) | 1,032 | 541 s | — | 1,032 / 1,032 |
+
+The 22-minute and hour runs use the final settings: the `WHISPER`
+segmentation preset and `echo`. Pass 1 on the hour sampled 1,032 units down
+to 509 (5,992 characters).
+
+Pass 1 repairs ASR errors from context. On the minute clip, Whisper's 三角語
+(a mishearing of 三ヶ国語) came out as "trilingual". On `NSY6YHXbxtA`, the
+glossary mapped the misheard コロヴィーナ to "Colombine".
+
+### VRAM: stages can't share the card
+
+An `nvidia-smi` trace every 3 s during the 22-minute run:
+
+| Phase | VRAM used |
+|---|---:|
+| Start (qwen3.5:9b still loaded from the previous run) | 11.5 GB |
+| After `unload()`, Whisper transcribing | 8.7–10.0 GB (peak) |
+| Whisper freed | 2.4 GB (desktop baseline) |
+| qwen3.5:9b translating | 8.4–8.6 GB |
+
+Whisper's **peak** during transcription is about 7.5 GB above baseline, much
+more than the ~4 GB measured after load in Milestone 0. So the two models
+can't share 12 GB, and the unload before transcription and release after it
+are both needed.
+
+### Line-shift bug and its fixes
+
+A shifted line is a translation filed under a neighbouring line's number. It
+was found by reading the first full output: between 55 s and 118 s every
+subtitle showed the line before's English, or the one before that. It's
+invisible in every metric so far, since every line still has English.
+
+The tests below repeat one chunk several times and check marker lines by hand.
+
+| Chunk | Setting | Shifted runs |
+|---|---|---:|
+| clip, chunk 1 | jp-subs format, gap 500 | **5 / 6** |
+| clip, chunks 1–2 | + `cue_end_min_chars=8` | 0 / 12 |
+| hour, chunk 34 | + `cue_end_min_chars=8` | **3 / 3** |
+| hour, chunk 34 | + `echo` | **0 / 3** |
+| clip, chunk 1, old segmentation (stress) | jp-subs format | 1 / 3 |
+| clip, chunk 1, old segmentation (stress) | `echo` | 0 / 3 |
+
+Full runs with `echo`:
+
+| | Retry events | Lines rejected by the copy check | Lines lost | Translate time |
+|---|---:|---:|---:|---:|
+| clip, without echo | 4 | — | 0 | 123 s |
+| clip, with echo | **0** | 0 | 0 | 118 s |
+| hour, without echo | 25 | — | 1 | 405 s |
+| hour, with echo | **12** | **2** (both genuine shifts, retried) | **0** | 541 s |
+
+Echo costs about a third more translation time on long conversation, and
+nothing measurable on the clip. That's worth it: without it, the hour's
+subtitles were wrong for whole stretches.
+
 ## To do
 
 - [ ] Re-run the Japanese RTF on real mp4/mkv downloads when available.
 - [ ] Test VAD-off hallucinations on a stream archive with a long waiting
       screen or BGM-only section.
+- [ ] Put an alignment check in the eval (3.1), so shifts show up as a number.

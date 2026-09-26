@@ -62,28 +62,33 @@ break lands on a real timestamp. That was the measured timing win in jp-subs
 ## Milestone 0: setup (about half a day)
 
 ### 0.1 Tooling
-- [ ] Create a venv with Python 3.11 (`py -3.11 -m venv .venv`). Use 3.11, not
+- [x] Create a venv with Python 3.11 (`py -3.11 -m venv .venv`). Use 3.11, not
       the 32-bit 3.13 that is also installed.
-- [ ] Add `pyproject.toml` with a `whisper-subs` console script, the
+- [x] Add `pyproject.toml` with a `whisper-subs` console script, the
       `faster-whisper` dependency, and `pytest` plus `ruff` as dev extras.
-- [ ] Use a `src/whisper_subs/` layout.
+- [x] Use a `src/whisper_subs/` layout.
 
 ### 0.2 Check the GPU. Do this first, because it decides everything else.
+
+> **Done 2026-09-26.** It works on CUDA fp16. See [benchmarks.md](benchmarks.md):
+> `large-v3` runs at 12.5× real time and `large-v3-turbo` at 46.5×.
 The RTX 5070 is Blackwell (sm_120). CTranslate2, which faster-whisper runs on,
 only supports it in recent CUDA 12.8+ builds.
-- [ ] `pip install faster-whisper`, then load `large-v3` with
+- [x] `pip install faster-whisper`, then load `large-v3` with
       `device="cuda", compute_type="float16"` and transcribe 30 s of audio.
-- [ ] If CUDA fails, record the error, try `compute_type="int8_float16"` and
+- [x] ~~If CUDA fails~~: the GPU works. The only failure was a missing
+      `cublas64_12.dll`, fixed with the `[cuda]` extra. If it had failed, try `compute_type="int8_float16"` and
       the latest `ctranslate2`, and as a last resort fall back to
       `device="cpu", compute_type="int8"` with `small` or `medium`.
-- [ ] Record the real-time factor (audio seconds per wall-clock second) for
+- [x] Record the real-time factor (audio seconds per wall-clock second) for
       `small`, `medium`, `large-v3` and `large-v3-turbo` in `docs/benchmarks.md`.
 
 ### 0.3 Audio decoding
 faster-whisper decodes through **PyAV**, which bundles FFmpeg's libraries, so
 mp4, mkv and mp3 files work **without a system ffmpeg**. That matters because
 ffmpeg isn't installed on this machine, and it makes packaging much simpler.
-- [ ] Use `faster_whisper.decode_audio()` first.
+- [x] Use `faster_whisper.decode_audio()` first. Confirmed: it decoded a WAV
+      with no system ffmpeg. Still to check on mp4 and mkv with real samples.
 - [ ] Keep the ffmpeg CLI (`winget install Gyan.FFmpeg`) as an optional
       fallback only, for files PyAV can't open.
 

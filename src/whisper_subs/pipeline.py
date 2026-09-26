@@ -6,8 +6,10 @@ chunks with that glossary and read-only context on both sides.
 
 import difflib
 import re
+import threading
 import unicodedata
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 
 from whisper_subs._js import js_len, js_round
 from whisper_subs.chunk import chunk
@@ -163,17 +165,24 @@ def translate_units(
         return [line for line in lines if not translations[line["n"] - 1]]
 
     should_stop = options.get("should_stop")
-    for c in chunks:
+    lock = threading.Lock()
+    finished = 0
+    stopped = False
+
+    def do_chunk(c):
+        nonlocal finished, stopped
         # Checked between chunks: a caller that has lost interest should not
         # keep occupying the GPU.
-        if should_stop and should_stop():
-            log(f"stopped after {c['index']} of {len(chunks)} chunks")
-            return {"translations": translations, "failures": failures, "stopped": True}
+        if stopped or (should_stop and should_stop()):
+            if not stopped:
+                stopped = True
+                log(f"stopped after {c['index']} of {len(chunks)} chunks")
+            return
 
         label = f"chunk {c['index'] + 1}/{len(chunks)}"
         total = len(c["target"])
         if initial and not outstanding(c):
-            continue  # done before the interruption
+            return  # done before the interruption
 
         try:
             request(c, outstanding(c), label)
@@ -192,15 +201,36 @@ def translate_units(
             except Exception as err:
                 log(f"{label}: retry {attempt} failed — {err}")
 
-        if on_progress:
-            on_progress(translations, c["index"] + 1, len(chunks))
-
-        left = len(outstanding(c))
-        if left:
-            failures.append(f"{label}: {left} of {total} lines still missing after 2 retries")
+        with lock:
+            finished += 1
+            if on_progress:
+                on_progress(translations, c["index"] + 1 if parallel == 1 else finished,
+                            len(chunks))
+            left = len(outstanding(c))
+            if left:
+                failures.append((c["index"], f"{label}: {left} of {total} lines still missing "
+                                             f"after 2 retries"))
         log(f"{label}: {total - left}/{total} lines")
 
-    return {"translations": translations, "failures": failures}
+    # Chunks are independent (context comes from the Japanese, never from
+    # earlier translations), so several can be in flight. Ollama still decodes
+    # one at a time here, but a queued request removes the ~2 s gap between
+    # one reply and the next prompt: 6 chunks took 48.0 s one at a time, 39.2 s
+    # two at a time (docs/benchmarks.md).
+    parallel = max(1, int(options.get("parallel", 1)))
+    if parallel == 1:
+        for c in chunks:
+            do_chunk(c)
+    else:
+        with ThreadPoolExecutor(parallel) as pool:
+            for future in [pool.submit(do_chunk, c) for c in chunks]:
+                future.result()  # re-raise anything unexpected, e.g. Ctrl+C
+
+    result = {"translations": translations,
+              "failures": [msg for _, msg in sorted(failures)]}
+    if stopped:
+        result["stopped"] = True
+    return result
 
 
 def run(transcript: dict, backend: Backend, options: dict | None = None,

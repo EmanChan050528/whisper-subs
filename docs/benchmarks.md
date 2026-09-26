@@ -395,6 +395,70 @@ During the resumed translation Ollama's runner failed once (HTTP 500,
 "connection was forcibly closed"). The chunk's automatic retry recovered all
 20 lines.
 
+## 2026-09-26: Speed
+
+Asked: why is it slower than jp-subs? First, where the time goes.
+
+### Translation is bound by output tokens
+
+Three hour-clip chunks, with Ollama's own counters:
+
+| Reply format | Wall time | Prompt read | Output written |
+|---|---:|---:|---:|
+| jp-subs plain | 16.1 s | 3,540 tokens in 0.8 s | 840 tokens in 9.0 s |
+| echo (copy each line, then translate) | 25.2 s | 3,851 tokens in 0.9 s | 1,683 tokens in 18.1 s |
+
+Output runs at **93 tokens/s** and reading the prompt is negligible, so time
+follows what the model writes, and echo doubles that. Another ~2 s per request
+is dead time between one reply and the next prompt.
+
+### Three speedups tried
+
+| Idea | Result | Kept? |
+|---|---|---|
+| Echo only the first 6 characters of each line | Hour chunk: **17 lines per run failed the copy check** (the model's fragments slid onto the previous line), one run shifted anyway, and it was *slower* (14–17 s against 8–13 s) | **No** |
+| Batch the gap-fill re-runs (`BatchedInferencePipeline`) | Saves 8–22 s, but recovers less speech (13% missed against 10%): it has no temperature fallback | **No** |
+| Keep a second translation request queued | 6 chunks: 48.0 s → 39.2 s | **Yes**, `--parallel 2` |
+
+Ollama itself runs with `OLLAMA_NUM_PARALLEL=1`. Tested on a temporary second
+server (same model files, port 11435), letting it decode 2 or 3 requests at
+once gave nothing more. The GPU is nearly full with the model loaded (11.5 GB):
+
+| Server setting | 6 chunks |
+|---|---:|
+| parallel 1, client sends 1 at a time | 48.0 s |
+| parallel 1, client keeps 2 in flight | **39.2 s** |
+| parallel 2 | 39.9 s |
+| parallel 2 + flash attention | 38.1 s |
+| parallel 3 + flash attention | 40.4 s |
+
+So no Ollama settings need changing.
+
+**Gap fill was not the hour's +47%.** It takes 14 s on the clip and 33 s on
+the hour, and Silero's speech map takes 3 s. The 329 s hour run had
+qwen3.5:9b still loaded (`--ja-only` skipped the unload). Clean, the hour
+transcribes in **270 s**. Fix: every transcription now unloads whatever
+Ollama has resident (`ollama.unload_all`).
+
+### Before and after
+
+| | Before | After |
+|---|---:|---:|
+| `NSY6YHXbxtA` (22 min), end to end | 4 min 24 s | **3 min 23 s** |
+| of which transcription | 120 s | 104 s |
+| of which translation | 132 s | **85 s** |
+| Hour clip, translation | 541 s | **336 s** |
+| Hour clip, end to end (clean) | ~14½ min | **~10 min** |
+
+Quality is unchanged. On the clip: 11% of YouTube's lines missed (10%
+before, within run-to-run noise), 4 flashes (5), 0 overlaps (0), 19 lines
+over 20 cps (20), and 1,047 / 1,047 on the hour.
+
+**Lesson from the measurement:** killing a test `ollama serve` doesn't kill the
+`llama-server.exe` runners it started. Three orphans held the GPU and made the
+first "after" run take 13 min 53 s (Whisper at 2.2× real time). Stop test
+servers with their runners, and check `nvidia-smi` before timing anything.
+
 ## To do
 
 - [ ] Re-run the Japanese RTF on real mp4/mkv downloads when available.

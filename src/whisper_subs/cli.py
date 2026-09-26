@@ -67,6 +67,8 @@ def parse_args(argv):
     t.add_argument("--bilingual", action="store_true",
                    help="also write .ja-en.srt with Japanese above the English")
     t.add_argument("--size", type=int, default=20, help="units translated per request")
+    t.add_argument("--parallel", type=int, default=2,
+                   help="translation requests in flight at once (default 2; 1 = one at a time)")
     t.add_argument("--context-before", type=int, default=10, help="read-only units before")
     t.add_argument("--context-after", type=int, default=6, help="read-only units after")
     t.add_argument("--limit", type=int, default=None,
@@ -154,11 +156,11 @@ def transcribe_step(src: Path, out_dir: Path, stem: str, args) -> dict | None:
         except AudioError as err:
             print(f"error: {err}", file=sys.stderr)
             return None
-        if not args.ja_only:
-            # An LLM left resident from an earlier run competes with Whisper for
-            # VRAM; both fit on 12 GB only barely (docs/benchmarks.md).
-            from whisper_subs.ollama import unload
-            unload(args.llm_model)
+        # An LLM left resident by an earlier run competes with Whisper for the
+        # GPU: an hour took 329 s with qwen3.5:9b still loaded, 270 s without
+        # (docs/benchmarks.md). Also for --ja-only, which never needs Ollama.
+        from whisper_subs.ollama import unload_all
+        unload_all()
         print(f"{src.name}: {len(audio) / 16000:.0f}s of audio, model {opts.model}")
         partial = load_cached(partial_path, opts, src)
 
@@ -210,6 +212,7 @@ def translate_step(transcript: dict, out_dir: Path, stem: str, args) -> int:
                # Copy-then-translate replies keep each line's English on that
                # line; jp-subs' plain format shifted lines on fragmented speech.
                "echo": True,
+               "parallel": args.parallel,
                "context_before": args.context_before, "context_after": args.context_after}
 
     if args.limit:

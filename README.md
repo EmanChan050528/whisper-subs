@@ -58,8 +58,8 @@ command again picks up where it stopped. If Ollama stops answering partway,
 the same command retries just the lines that are missing. Use `--force` to
 start over.
 
-A 22-minute video takes about 4 minutes on an RTX 5070: 2 to transcribe, 2 to
-translate. Whisper and the LLM take turns on the GPU. See
+A 22-minute video takes about 3½ minutes on an RTX 5070, and an hour of
+conversation about 10. Whisper and the LLM take turns on the GPU. See
 [docs/benchmarks.md](docs/benchmarks.md).
 
 The translation pipeline is a Python port of

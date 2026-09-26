@@ -139,7 +139,19 @@ def unload(model: str, host: str = DEFAULT_HOST) -> None:
         pass
 
 
-_FENCE_HEAD = re.compile(r"^[\s\S]*?```(?:json)?\s*", re.IGNORECASE)
+def unload_all(host: str = DEFAULT_HOST) -> None:
+    """Unload every model Ollama has resident. Silent if Ollama is not running."""
+    try:
+        with urllib.request.urlopen(_host_url(host).rstrip("/") + "/api/ps", timeout=5) as r:
+            running = json.loads(r.read().decode("utf-8")).get("models", [])
+    except (urllib.error.URLError, TimeoutError, ValueError):
+        return
+    for m in running:
+        if m.get("name"):
+            unload(m["name"], host)
+
+
+_FENCE_HEAD =re.compile(r"^[\s\S]*?```(?:json)?\s*", re.IGNORECASE)
 _FENCE_TAIL = re.compile(r"```[\s\S]*\Z")
 
 

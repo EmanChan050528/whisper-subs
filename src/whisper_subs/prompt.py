@@ -92,6 +92,9 @@ Every number listed above must appear exactly once. No preamble, no code fence."
 #: line (docs/benchmarks.md, milestone 2). Copying each line's Japanese right
 #: before its English anchors the translation to that line, and a copy that
 #: does not match the line reveals a shift, so the pipeline can reject it.
+#: Copying only the first 6 characters (to halve the output tokens) was tried
+#: and rejected: on the hour clip the model's fragments slid onto the previous
+#: line, 17 lines per run failed the check, and it ran slower, not faster.
 REPLY_ECHO = """Return JSON mapping each line number to an object holding that line's Japanese, copied exactly, and its English translation, and nothing else:
 
 {${example}}

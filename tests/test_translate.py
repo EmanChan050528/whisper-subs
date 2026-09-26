@@ -150,3 +150,21 @@ def test_echo_mode_accepts_bare_strings_only_as_a_last_resort():
 
     out = translate_units(units, {}, backend, {"echo": True})
     assert out["translations"] == ["Yes"] and len(calls) == 3
+
+
+def test_parallel_translation_matches_sequential():
+    from whisper_subs.pipeline import translate_units
+
+    units = _chunk_units(*[f"これは{i}番" for i in range(9)])
+
+    def backend(prompt, json_mode=False):
+        body = prompt.split("LINES TO TRANSLATE\n")[1].split("\n\nRules:")[0]
+        lines = [line.split("\t") for line in body.split("\n")]
+        # line 5 is never answered, to check failures stay in chunk order
+        return json.dumps({n: {"ja": ja, "en": f"Line {n}."} for n, ja in lines if n != "5"},
+                          ensure_ascii=False)
+
+    runs = [translate_units(units, {}, backend, {"echo": True, "size": 2, "parallel": p})
+            for p in (1, 3)]
+    assert runs[0] == runs[1]
+    assert runs[0]["translations"][4] == "" and len(runs[0]["failures"]) == 1

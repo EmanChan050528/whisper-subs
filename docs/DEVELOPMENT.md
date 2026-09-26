@@ -407,6 +407,16 @@ user names one.
       That's fine up to several hours, but for a 10-hour archive, decode per
       window instead.
 
+### 3.8 Speed (added: asked for after 3.6)
+- [x] Measured where the time goes: translation is bound by output tokens
+      (93 tok/s), and echo doubles them.
+- [x] `--parallel 2` (the default) keeps a second request queued: translation
+      −36% on the clip and −38% on the hour.
+- [x] Every transcription unloads whatever Ollama has resident. A leftover
+      LLM had made an hour's transcription 22% slower.
+- [x] ~~Echo only a prefix~~ and ~~batch gap fill~~: tried and rejected
+      (shifted lines, and less speech recovered). See benchmarks.md.
+
 ### 3.7 Overlapping speech (keep this scope small)
 - [ ] Record it as a known limitation first and measure it on the two-speaker
       sample.

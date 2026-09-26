@@ -319,11 +319,18 @@ speech that YouTube captioned fell inside blank stretches of 10 s or more.
       stretches.
 - [x] `eval/coverage.py`: coverage of a `.ja.json` against a reference, with
       the missed and extra lines listed.
-- [ ] **Alignment check** (from 2.5): flag translated lines that plausibly
-      belong to a neighbour. **Unsolved.** An English-length heuristic caught
-      1 of 52 deliberately shifted lines, so it was removed. The next thing to
-      try is a model-based back-check with the small `qwen3.5:2b`: "does this
-      English translate this Japanese?", in batches.
+- [x] **Alignment check** (`align.py`; `eval/align.py` to report,
+      `whisper-subs --check` to report and repair). A model is shown each
+      English line with the previous, own and next Japanese lines and asked
+      which one it translates. Only **runs** of 2+ lines pointing the same wrong
+      way count, because a lone vote on a fragment like そう is noise. The judge
+      is qwen3.5:9b at temperature 0. The 2B raised a false alarm on clean
+      output, and at 0.2 the verdicts changed between runs. Results: 0 false
+      alarms on 342 clean lines; every planted shift found at the right lines;
+      real shifts (jp-subs' plain format) found, 0 on the same stretch with
+      echo. Repair re-translates each run plus 2 lines either side with echo,
+      then re-judges. Cost about 0.25 s per line. An English-length heuristic
+      tried earlier caught 1 of 52 and was removed.
 - [ ] Reuse jp-subs' human-reference English (`eval/reference/`). It covers
       `EmteTL5Ij8g`, which we don't have audio for, so this needs that video
       or a new reference for `NSY6YHXbxtA`.
@@ -340,9 +347,18 @@ rejected) and 2.5 (`cue_end_min_chars=8`).
       never overlapping, and gaps under 250 ms closed to two frames (83 ms).
       On `NSY6YHXbxtA`: flashes 41 → 5, overlaps 4 → 0, over 20 cps 42 → 20.
 - [x] Word ends are already used instead of segment ends (1.3b).
-- [ ] Split units longer than 7 s at the widest internal word gap. There are
-      3 on the clip. It needs splitting the English too, so maybe pass it to
-      the translator as two lines instead.
+- [x] **A stretched last word** (「でした」 6.7 s over music) no longer holds a
+      subtitle up: each cue's last word is capped at 1.5 s. 「お疲れ様でした」
+      went from 9.6 s to 4.4 s. Only the last word is capped, because capping
+      inside a line opened a gap the 1 s rule then split (奥|深い).
+- [x] **Long cues split at a real clause break**: over 7 s, at the widest pause
+      of 0.15 s or more, after hiragana or punctuation, with 6+ characters
+      either side. The first version, widest pause only, cut 奥|ゆかしい.
+- [ ] Most long units are genuinely dense speech with no clause pause (the
+      minute clip's two 10–11 s read sentences; 18 of 1,048 on the hour), so
+      they stay whole. Chopping a sentence mid-clause would hurt the
+      translation more. A stretched word in the middle of a line (「次回予告」,
+      13.8 s) is also left alone; it's rare.
 
 ### 3.4 Hallucination guards (`filters.py`)
 Whisper produces predictable junk on silence and music.
@@ -356,6 +372,8 @@ Whisper produces predictable junk on silence and music.
       (`dropped`), so the filters can be audited.
 - [ ] ~~Drop segments with `no_speech_prob > 0.6`~~: rejected. Real voice
       lines over music score 0.7 to 0.88.
+- [x] Single-character gap-fill recoveries (シ, 最, で) are dropped: 13 of 73
+      on the hour clip. Main-pass fragments are left to merge.
 - [ ] Test on a stream archive with a long BGM-only waiting screen. That's
       still the biggest risk with VAD off.
 
@@ -403,9 +421,20 @@ user names one.
 - [x] A resumed run doesn't merge the glossary a second time.
 - [ ] Progress is still the CLI's own line, not `tqdm`. That's enough for
       now, and the GUI will need its own anyway.
-- [ ] Memory: the whole file is decoded into RAM (about 230 MB per hour).
-      That's fine up to several hours, but for a 10-hour archive, decode per
-      window instead.
+- [x] **Streaming.** Audio is decoded sequentially in 60 s blocks
+      (`audio.stream`, never seeking) and each window is transcribed once enough
+      audio has arrived to choose its cut, so audio memory is constant: about
+      12 minutes at most, not 230 MB per hour. The streamed samples are
+      **bit-identical** to the whole-file decode on mp3, mkv and mp4, and
+      decoding the hour peaks at 18 MB. Gap fill now runs per window, and its
+      results are checkpointed too.
+- [x] Cuts go at the point inside a pause nearest the mark, at least 0.25 s
+      clear of speech, not the middle of the pause (for a long silence that is
+      the mark itself).
+- [x] Checked against Whisper's own noise. Two identical in-memory runs agree
+      only 0.949 on text (retries sample at higher temperatures). Streamed vs
+      in-memory: 0.962 and 0.977. Same cuts, and the same 10% of reference
+      lines missed.
 
 ### 3.8 Speed (added: asked for after 3.6)
 - [x] Measured where the time goes: translation is bound by output tokens

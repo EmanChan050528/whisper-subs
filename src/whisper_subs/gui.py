@@ -183,12 +183,15 @@ class MainWindow(QMainWindow):
         glossary_row.addWidget(glossary_folder)
         self.bilingual = QCheckBox("Also write a bilingual file (Japanese above English)")
         self.ja_only = QCheckBox("Japanese only (skip translation; Ollama not needed)")
+        self.check = QCheckBox("Check for lines translated onto the wrong subtitle, and fix them "
+                               "(slower)")
 
         form = QFormLayout()
         form.addRow("Transcription model", self.whisper)
         form.addRow("Translation model", self.llm)
         form.addRow("Series glossary", glossary_row)
         form.addRow("", self.bilingual)
+        form.addRow("", self.check)
         form.addRow("", self.ja_only)
         box = QGroupBox("Settings")
         box.setLayout(form)
@@ -268,6 +271,7 @@ class MainWindow(QMainWindow):
         self.glossary.setCurrentText(self.prefs.value("glossary", ""))
         self.bilingual.setChecked(self.prefs.value("bilingual", False, type=bool))
         self.ja_only.setChecked(self.prefs.value("ja_only", False, type=bool))
+        self.check.setChecked(self.prefs.value("check", False, type=bool))
 
     def save_prefs(self) -> None:
         self.prefs.setValue("llm_model", self.llm.currentText().strip())
@@ -275,12 +279,14 @@ class MainWindow(QMainWindow):
         self.prefs.setValue("glossary", self.glossary.currentText().strip())
         self.prefs.setValue("bilingual", self.bilingual.isChecked())
         self.prefs.setValue("ja_only", self.ja_only.isChecked())
+        self.prefs.setValue("check", self.check.isChecked())
 
     def settings(self) -> Settings:
         g = self.glossary.currentText().strip() or None
         return Settings(model=self.whisper.currentData(), glossary=g,
                         llm_model=self.llm.currentText().strip() or ollama.DEFAULT_MODEL,
-                        bilingual=self.bilingual.isChecked(), ja_only=self.ja_only.isChecked())
+                        bilingual=self.bilingual.isChecked(), ja_only=self.ja_only.isChecked(),
+                        check=self.check.isChecked())
 
     def check_health(self) -> None:
         """What will and won't work, before anyone presses Start."""
@@ -307,7 +313,7 @@ class MainWindow(QMainWindow):
 
     def update_enabled(self) -> None:
         on = not self.ja_only.isChecked()
-        for w in (self.llm, self.bilingual, self.glossary):
+        for w in (self.llm, self.bilingual, self.glossary, self.check):
             w.setEnabled(on)
 
     def open_glossary_folder(self) -> None:
@@ -383,7 +389,8 @@ class MainWindow(QMainWindow):
         self.start_btn.setEnabled(not on)
         self.stop_btn.setEnabled(on)
         self.drop.setEnabled(True)  # adding more files while running is fine
-        for w in (self.whisper, self.llm, self.glossary, self.bilingual, self.ja_only):
+        for w in (self.whisper, self.llm, self.glossary, self.bilingual, self.ja_only,
+                  self.check):
             w.setEnabled(not on)
         if not on:
             self.update_enabled()

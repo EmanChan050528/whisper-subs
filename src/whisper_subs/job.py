@@ -60,6 +60,10 @@ class Settings:
     context_after: int = 6
     limit: int | None = None
     gap_ms: int | None = None
+    # After translating, ask a model which line each English line belongs to,
+    # and re-translate runs that landed on a neighbour (align.py). About a
+    # quarter of a second per line.
+    check: bool = False
 
 
 @dataclass
@@ -68,6 +72,8 @@ class Result:
     units: int = 0
     translated: int = 0
     failures: list[str] = field(default_factory=list)
+    #: With Settings.check: shifted runs the repair could not fix.
+    shifted_left: int = 0
 
     @property
     def missing(self) -> int:
@@ -184,18 +190,19 @@ def _transcribe(src, out_dir, stem, s, log, progress, should_stop) -> dict:
     if whisper:
         log(f"using cached transcription: {whisper_path.name}")
     else:
-        from whisper_subs.audio import AudioError, load
+        from whisper_subs.audio import AudioError, check, stream
         from whisper_subs.transcribe import transcribe
 
         try:
-            audio = load(src)
+            duration = check(src)
         except AudioError as err:
             raise JobError(str(err)) from err
         # An LLM left resident by an earlier run competes with Whisper for the
         # GPU: an hour took 329 s with qwen3.5:9b still loaded, 270 s without
         # (docs/benchmarks.md). Also when Japanese-only, which never needs it.
         ollama.unload_all()
-        log(f"{src.name}: {len(audio) / 16000:.0f}s of audio, model {opts.model}")
+        length = f"{duration:.0f}s of audio" if duration else "unknown length"
+        log(f"{src.name}: {length}, model {opts.model}")
         partial = load_cached(partial_path, opts, src)
 
         def checkpoint(state):
@@ -207,11 +214,15 @@ def _transcribe(src, out_dir, stem, s, log, progress, should_stop) -> dict:
                 raise Stopped
 
         started = time.perf_counter()
-        whisper = {"source": source_id(src),
-                   **transcribe(audio, opts,
-                                on_progress=lambda done, total: progress("transcribe", done, total),
-                                log=log, resume=partial["state"] if partial else None,
-                                on_checkpoint=checkpoint, check_stop=stop_check)}
+        try:
+            whisper = {"source": source_id(src),
+                       # Streamed: a long file is never held in memory whole.
+                       **transcribe(stream(src), opts, duration=duration,
+                                    on_progress=lambda d, t: progress("transcribe", d, t),
+                                    log=log, resume=partial["state"] if partial else None,
+                                    on_checkpoint=checkpoint, check_stop=stop_check)}
+        except AudioError as err:  # e.g. decodes to nothing, found only while streaming
+            raise JobError(str(err)) from err
         elapsed = time.perf_counter() - started
         log(f"{len(whisper['segments'])} segments in {elapsed:.0f}s "
             f"({whisper['duration'] / elapsed:.1f}x real time, "
@@ -291,11 +302,16 @@ def _translate(transcript, out_dir, stem, s, stored, log, progress, should_stop,
 
     out = translate_units(units, found_glossary, backend, options, log, on_progress=on_chunk,
                           initial=partial["translations"] if partial else None)
-    seconds = time.perf_counter() - started
     translations = out["translations"]
     if out.get("stopped"):
         checkpoint(found_glossary, translations)
         raise Stopped
+    if s.check:
+        from whisper_subs.align import check_and_repair
+        translations, report = check_and_repair(units, translations, found_glossary, backend,
+                                                options, log)
+        result.shifted_left = len(report["left"])
+    seconds = time.perf_counter() - started
 
     result.units = len(units)
     result.translated = sum(1 for t in translations if t)

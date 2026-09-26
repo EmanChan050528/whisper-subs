@@ -1,0 +1,1753 @@
+{
+ "fixture": "whisper_NSY6YHXbxtA.ja.json",
+ "preset": "echo",
+ "options": {
+  "gapMs": 500,
+  "echo": true
+ },
+ "units": [
+  {
+   "ja": "どうもみなさんこんばんはお待たせいたしました",
+   "start_ms": 0,
+   "end_ms": 1720,
+   "cue_index": [
+    0
+   ]
+  },
+  {
+   "ja": "ケンマシェです",
+   "start_ms": 2300,
+   "end_ms": 3060,
+   "cue_index": [
+    1
+   ]
+  },
+  {
+   "ja": "よろしくお願いします",
+   "start_ms": 4080,
+   "end_ms": 4880,
+   "cue_index": [
+    2
+   ]
+  },
+  {
+   "ja": "プレイス マドクライ ルナさん6幕やっていきたいと思いますよろしくお願いします",
+   "start_ms": 5600,
+   "end_ms": 10960,
+   "cue_index": [
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "ja": "少女どうなるかですね",
+   "start_ms": 11480,
+   "end_ms": 13200,
+   "cue_index": [
+    6
+   ]
+  },
+  {
+   "ja": "人生という長い旅路の中では家族や友人も時間とともに変化していくその人たちが違う名前であなたを呼んだとしても大事なのは",
+   "start_ms": 13860,
+   "end_ms": 25760,
+   "cue_index": [
+    7,
+    8,
+    9,
+    10,
+    11,
+    12
+   ]
+  },
+  {
+   "ja": "名前自体じゃない",
+   "start_ms": 25760,
+   "end_ms": 27480,
+   "cue_index": [
+    13
+   ]
+  },
+  {
+   "ja": "その名前があなたを表しているという事実よそれとそれをあなたが認められるか否かね",
+   "start_ms": 28360,
+   "end_ms": 37080,
+   "cue_index": [
+    14,
+    15,
+    16
+   ]
+  },
+  {
+   "ja": "だから目を閉じて",
+   "start_ms": 38340,
+   "end_ms": 39820,
+   "cue_index": [
+    17
+   ]
+  },
+  {
+   "ja": "頭の中に月神のお嬢さんの後ろ姿を思い浮かべて",
+   "start_ms": 40600,
+   "end_ms": 45760,
+   "cue_index": [
+    18
+   ]
+  },
+  {
+   "ja": "さあ何て呼びかける",
+   "start_ms": 46880,
+   "end_ms": 49700,
+   "cue_index": [
+    19
+   ]
+  },
+  {
+   "ja": "コロンビーナ",
+   "start_ms": 53660,
+   "end_ms": 54880,
+   "cue_index": [
+    20
+   ]
+  },
+  {
+   "ja": "コロンビーナ",
+   "start_ms": 55520,
+   "end_ms": 56620,
+   "cue_index": [
+    21
+   ]
+  },
+  {
+   "ja": "じゃあコロンビーナがちゃんと名前になるってこと",
+   "start_ms": 60540,
+   "end_ms": 63200,
+   "cue_index": [
+    22
+   ]
+  },
+  {
+   "ja": "買ったのかな",
+   "start_ms": 86620,
+   "end_ms": 87380,
+   "cue_index": [
+    23
+   ]
+  },
+  {
+   "ja": "教えてくれる",
+   "start_ms": 93140,
+   "end_ms": 94600,
+   "cue_index": [
+    24
+   ]
+  },
+  {
+   "ja": "私の名前",
+   "start_ms": 98660,
+   "end_ms": 100180,
+   "cue_index": [
+    25
+   ]
+  },
+  {
+   "ja": "コロヴィーナ",
+   "start_ms": 101200,
+   "end_ms": 102360,
+   "cue_index": [
+    26
+   ]
+  },
+  {
+   "ja": "まだ見えてない",
+   "start_ms": 108540,
+   "end_ms": 110000,
+   "cue_index": [
+    27
+   ]
+  },
+  {
+   "ja": "うわっ",
+   "start_ms": 116580,
+   "end_ms": 118100,
+   "cue_index": [
+    28
+   ]
+  },
+  {
+   "ja": "この名前が嫌いじゃないなら",
+   "start_ms": 142020,
+   "end_ms": 144260,
+   "cue_index": [
+    29
+   ]
+  },
+  {
+   "ja": "呼んだえっ",
+   "start_ms": 158880,
+   "end_ms": 160960,
+   "cue_index": [
+    30,
+    31
+   ]
+  },
+  {
+   "ja": "うわー",
+   "start_ms": 166240,
+   "end_ms": 167280,
+   "cue_index": [
+    32
+   ]
+  },
+  {
+   "ja": "好きだよ",
+   "start_ms": 172060,
+   "end_ms": 173440,
+   "cue_index": [
+    33
+   ]
+  },
+  {
+   "ja": "だからこれからもそう呼んでね",
+   "start_ms": 175500,
+   "end_ms": 177900,
+   "cue_index": [
+    34
+   ]
+  },
+  {
+   "ja": "私の名前は",
+   "start_ms": 178920,
+   "end_ms": 180620,
+   "cue_index": [
+    35
+   ]
+  },
+  {
+   "ja": "コロンビーナ",
+   "start_ms": 181260,
+   "end_ms": 182260,
+   "cue_index": [
+    36
+   ]
+  },
+  {
+   "ja": "ハイポステレニア",
+   "start_ms": 182880,
+   "end_ms": 184360,
+   "cue_index": [
+    37
+   ]
+  },
+  {
+   "ja": "めちゃめちゃ泣いてた",
+   "start_ms": 204480,
+   "end_ms": 205780,
+   "cue_index": [
+    38
+   ]
+  },
+  {
+   "ja": "好きだよって言った?",
+   "start_ms": 209920,
+   "end_ms": 211580,
+   "cue_index": [
+    39
+   ]
+  },
+  {
+   "ja": "気のせい名前か危ないわ危ない危ない完全に消えるとこだった",
+   "start_ms": 211700,
+   "end_ms": 217520,
+   "cue_index": [
+    40,
+    41,
+    42,
+    43,
+    44
+   ]
+  },
+  {
+   "ja": "まあ普通にデート",
+   "start_ms": 222060,
+   "end_ms": 223020,
+   "cue_index": [
+    45
+   ]
+  },
+  {
+   "ja": "私のより酸っぱい",
+   "start_ms": 259300,
+   "end_ms": 261360,
+   "cue_index": [
+    46
+   ]
+  },
+  {
+   "ja": "はい",
+   "start_ms": 262540,
+   "end_ms": 263060,
+   "cue_index": [
+    47
+   ]
+  },
+  {
+   "ja": "私のも食べて",
+   "start_ms": 263860,
+   "end_ms": 265300,
+   "cue_index": [
+    48
+   ]
+  },
+  {
+   "ja": "なんだか不思議",
+   "start_ms": 273060,
+   "end_ms": 274700,
+   "cue_index": [
+    49
+   ]
+  },
+  {
+   "ja": "自分の分が減ったのに",
+   "start_ms": 288500,
+   "end_ms": 290760,
+   "cue_index": [
+    50
+   ]
+  },
+  {
+   "ja": "心は別の何かで満たされたような気分だから",
+   "start_ms": 291800,
+   "end_ms": 296140,
+   "cue_index": [
+    51,
+    52
+   ]
+  },
+  {
+   "ja": "この感じも",
+   "start_ms": 297980,
+   "end_ms": 299100,
+   "cue_index": [
+    53
+   ]
+  },
+  {
+   "ja": "ちゃんと覚えておくね",
+   "start_ms": 299860,
+   "end_ms": 301480,
+   "cue_index": [
+    54
+   ]
+  },
+  {
+   "ja": "お祭りで彼女とデートなんてしなくていいこれを超えられることはないだろ",
+   "start_ms": 315500,
+   "end_ms": 320420,
+   "cue_index": [
+    55,
+    56
+   ]
+  },
+  {
+   "ja": "なにするんだ?",
+   "start_ms": 334700,
+   "end_ms": 335560,
+   "cue_index": [
+    57
+   ]
+  },
+  {
+   "ja": "顔",
+   "start_ms": 339080,
+   "end_ms": 339520,
+   "cue_index": [
+    58
+   ]
+  },
+  {
+   "ja": "やめなさい、レディえ!",
+   "start_ms": 341700,
+   "end_ms": 343600,
+   "cue_index": [
+    59,
+    60
+   ]
+  },
+  {
+   "ja": "?",
+   "start_ms": 343600,
+   "end_ms": 344460,
+   "cue_index": [
+    60
+   ]
+  },
+  {
+   "ja": "思っ苦しいのに それにもしつけてるところを誰かに見られたら",
+   "start_ms": 364700,
+   "end_ms": 369840,
+   "cue_index": [
+    61
+   ]
+  },
+  {
+   "ja": "恥ずかしするだろう",
+   "start_ms": 370460,
+   "end_ms": 371720,
+   "cue_index": [
+    62
+   ]
+  },
+  {
+   "ja": "つける",
+   "start_ms": 373860,
+   "end_ms": 374740,
+   "cue_index": [
+    63
+   ]
+  },
+  {
+   "ja": "ああああああ",
+   "start_ms": 379680,
+   "end_ms": 381200,
+   "cue_index": [
+    64
+   ]
+  },
+  {
+   "ja": "フッハハハハハ",
+   "start_ms": 386140,
+   "end_ms": 388160,
+   "cue_index": [
+    65
+   ]
+  },
+  {
+   "ja": "あれユーザーがいる",
+   "start_ms": 390120,
+   "end_ms": 391440,
+   "cue_index": [
+    66
+   ]
+  },
+  {
+   "ja": "え?",
+   "start_ms": 397420,
+   "end_ms": 397780,
+   "cue_index": [
+    67
+   ]
+  },
+  {
+   "ja": "え?",
+   "start_ms": 398960,
+   "end_ms": 398980,
+   "cue_index": [
+    68
+   ]
+  },
+  {
+   "ja": "さすがお父様",
+   "start_ms": 407040,
+   "end_ms": 408300,
+   "cue_index": [
+    69
+   ]
+  },
+  {
+   "ja": "頑張ったら食われないかなこれぐらい",
+   "start_ms": 408960,
+   "end_ms": 411660,
+   "cue_index": [
+    70,
+    71
+   ]
+  },
+  {
+   "ja": "これぐらい",
+   "start_ms": 414840,
+   "end_ms": 415740,
+   "cue_index": [
+    72
+   ]
+  },
+  {
+   "ja": "YouTubeで動画見てるときに下にアカウントが出てくるぐらいの大きさでいい俺なんてもう",
+   "start_ms": 417420,
+   "end_ms": 423400,
+   "cue_index": [
+    73,
+    74,
+    75,
+    76
+   ]
+  },
+  {
+   "ja": "一番飛び込んでた",
+   "start_ms": 433160,
+   "end_ms": 434520,
+   "cue_index": [
+    77
+   ]
+  },
+  {
+   "ja": "俺は寸劇の",
+   "start_ms": 435020,
+   "end_ms": 436480,
+   "cue_index": [
+    78
+   ]
+  },
+  {
+   "ja": "エヴァシラ俺も持ってる",
+   "start_ms": 437600,
+   "end_ms": 441740,
+   "cue_index": [
+    79,
+    80
+   ]
+  },
+  {
+   "ja": "祭りは全力で楽しめないとな",
+   "start_ms": 458580,
+   "end_ms": 460740,
+   "cue_index": [
+    81
+   ]
+  },
+  {
+   "ja": "心配してくれてたの?",
+   "start_ms": 484700,
+   "end_ms": 486160,
+   "cue_index": [
+    82
+   ]
+  },
+  {
+   "ja": "はぁ?",
+   "start_ms": 487620,
+   "end_ms": 489020,
+   "cue_index": [
+    83
+   ]
+  },
+  {
+   "ja": "勘違いしないでちょうだいバカのこと言ってくれちゃってるわけ?",
+   "start_ms": 489020,
+   "end_ms": 493360,
+   "cue_index": [
+    83,
+    84
+   ]
+  },
+  {
+   "ja": "私のことが心配でファデュイだってバレないようにわざわざ髪飾りまでつけて会いに来てくれたんだよね",
+   "start_ms": 494400,
+   "end_ms": 503820,
+   "cue_index": [
+    85,
+    86,
+    87,
+    88
+   ]
+  },
+  {
+   "ja": "アロンニアも連れずに",
+   "start_ms": 504520,
+   "end_ms": 506420,
+   "cue_index": [
+    89
+   ]
+  },
+  {
+   "ja": "かわいい",
+   "start_ms": 511860,
+   "end_ms": 512520,
+   "cue_index": [
+    90
+   ]
+  },
+  {
+   "ja": "あらかた目の前のかわいい猫見入り死ぬところでした右下にある猫見入りで葬祭されてなかったら死んでましたあこれもかわいいだ",
+   "start_ms": 513540,
+   "end_ms": 521080,
+   "cue_index": [
+    91,
+    92,
+    93,
+    94
+   ]
+  },
+  {
+   "ja": "馬にとか欲しいな",
+   "start_ms": 521080,
+   "end_ms": 523200,
+   "cue_index": [
+    95
+   ]
+  },
+  {
+   "ja": "そうだサンドローネ",
+   "start_ms": 524020,
+   "end_ms": 525460,
+   "cue_index": [
+    96
+   ]
+  },
+  {
+   "ja": "一緒にあれで遊ぼう",
+   "start_ms": 526260,
+   "end_ms": 527920,
+   "cue_index": [
+    97
+   ]
+  },
+  {
+   "ja": "フロストフィンイルカ?",
+   "start_ms": 528440,
+   "end_ms": 530340,
+   "cue_index": [
+    98
+   ]
+  },
+  {
+   "ja": "うん",
+   "start_ms": 531680,
+   "end_ms": 532040,
+   "cue_index": [
+    99
+   ]
+  },
+  {
+   "ja": "ハズレの歯を踏むと噛まれる遊び",
+   "start_ms": 532780,
+   "end_ms": 536260,
+   "cue_index": [
+    100
+   ]
+  },
+  {
+   "ja": "お手本を見せてあげるわこうやって踏めばいいのよ踏み方可愛くない?",
+   "start_ms": 539760,
+   "end_ms": 548900,
+   "cue_index": [
+    101,
+    102,
+    103
+   ]
+  },
+  {
+   "ja": "どれにしようかな考えろ考えろ大事なのは運営目線になるということ",
+   "start_ms": 557060,
+   "end_ms": 563380,
+   "cue_index": [
+    104,
+    105,
+    106
+   ]
+  },
+  {
+   "ja": "噛まれた後のサンドローネの",
+   "start_ms": 564040,
+   "end_ms": 566300,
+   "cue_index": [
+    107
+   ]
+  },
+  {
+   "ja": "多分ね",
+   "start_ms": 566940,
+   "end_ms": 567540,
+   "cue_index": [
+    108
+   ]
+  },
+  {
+   "ja": "イラストを用意されてると思うってなった時のことを考えるとやはり噛まれた後のサンドローネの姿を見せやすい位置で噛まれるということが",
+   "start_ms": 568180,
+   "end_ms": 578580,
+   "cue_index": [
+    109,
+    110,
+    111,
+    112,
+    113
+   ]
+  },
+  {
+   "ja": "大事になってくるつまり真ん中かおそらく",
+   "start_ms": 578580,
+   "end_ms": 581840,
+   "cue_index": [
+    114,
+    115
+   ]
+  },
+  {
+   "ja": "ここがやはりサンドローネが噛まれてやはり画像にしやすい正面から撮りやすいやはりここで噛まれてしまうと画像にしづらい",
+   "start_ms": 582520,
+   "end_ms": 592540,
+   "cue_index": [
+    116,
+    117,
+    118,
+    119,
+    120,
+    121
+   ]
+  },
+  {
+   "ja": "コロンビーナとサンドローネの立ち位置でカメラの画角のアングルをこっちから持っていかないといけないんじゃね",
+   "start_ms": 593060,
+   "end_ms": 598880,
+   "cue_index": [
+    122,
+    123,
+    124
+   ]
+  },
+  {
+   "ja": "ってなった場合この建物がちょっと邪魔になるんだよということで多分おそらくこの真ん中かこっちのどちらかが罠ですつまりここは",
+   "start_ms": 598880,
+   "end_ms": 607040,
+   "cue_index": [
+    125,
+    126,
+    127,
+    128
+   ]
+  },
+  {
+   "ja": "セーブです皆さんいいですね",
+   "start_ms": 607040,
+   "end_ms": 608640,
+   "cue_index": [
+    129
+   ]
+  },
+  {
+   "ja": "本気だった",
+   "start_ms": 611560,
+   "end_ms": 612120,
+   "cue_index": [
+    130
+   ]
+  },
+  {
+   "ja": "いいよいい位置いい位置いい位置",
+   "start_ms": 622940,
+   "end_ms": 639440,
+   "cue_index": [
+    131
+   ]
+  },
+  {
+   "ja": "これぐらい余裕なのだね",
+   "start_ms": 653560,
+   "end_ms": 654920,
+   "cue_index": [
+    132
+   ]
+  },
+  {
+   "ja": "やはり普段日頃から画角を意識しているほど",
+   "start_ms": 655600,
+   "end_ms": 659780,
+   "cue_index": [
+    133
+   ]
+  },
+  {
+   "ja": "向かいない",
+   "start_ms": 660680,
+   "end_ms": 661500,
+   "cue_index": [
+    134
+   ]
+  },
+  {
+   "ja": "うー",
+   "start_ms": 665760,
+   "end_ms": 666560,
+   "cue_index": [
+    135
+   ]
+  },
+  {
+   "ja": "うー",
+   "start_ms": 668660,
+   "end_ms": 669460,
+   "cue_index": [
+    136
+   ]
+  },
+  {
+   "ja": "もう一回勝負よ",
+   "start_ms": 682540,
+   "end_ms": 684260,
+   "cue_index": [
+    137
+   ]
+  },
+  {
+   "ja": "なるほど この子はハズレを感知できるのね",
+   "start_ms": 686200,
+   "end_ms": 689560,
+   "cue_index": [
+    138
+   ]
+  },
+  {
+   "ja": "コロンビーナが避けた歯を踏まなければ勝てるわ",
+   "start_ms": 691920,
+   "end_ms": 695320,
+   "cue_index": [
+    139
+   ]
+  },
+  {
+   "ja": "あれを避けた",
+   "start_ms": 697040,
+   "end_ms": 698300,
+   "cue_index": [
+    140
+   ]
+  },
+  {
+   "ja": "この勝負もらったわ",
+   "start_ms": 700320,
+   "end_ms": 702940,
+   "cue_index": [
+    141
+   ]
+  },
+  {
+   "ja": "さあ 私の番ね",
+   "start_ms": 703520,
+   "end_ms": 705740,
+   "cue_index": [
+    142
+   ]
+  },
+  {
+   "ja": "このゲームどこのバカが作ったのよ",
+   "start_ms": 733640,
+   "end_ms": 736900,
+   "cue_index": [
+    143
+   ]
+  },
+  {
+   "ja": "大丈夫?",
+   "start_ms": 739800,
+   "end_ms": 740280,
+   "cue_index": [
+    144
+   ]
+  },
+  {
+   "ja": "随分荒れてるけどこのゲームどこのバカが作ったのよふっ 大丈夫よ",
+   "start_ms": 740280,
+   "end_ms": 744860,
+   "cue_index": [
+    144,
+    145,
+    146
+   ]
+  },
+  {
+   "ja": "もしあれなら 君も私の頭を叩く?",
+   "start_ms": 748080,
+   "end_ms": 752320,
+   "cue_index": [
+    147
+   ]
+  },
+  {
+   "ja": "そんな必要ないわよ",
+   "start_ms": 753120,
+   "end_ms": 754800,
+   "cue_index": [
+    148
+   ]
+  },
+  {
+   "ja": "何回か叩いていいよ だって何度も負けちゃったんだから",
+   "start_ms": 755500,
+   "end_ms": 761620,
+   "cue_index": [
+    149
+   ]
+  },
+  {
+   "ja": "うっ 必要ないって言っているでしょ",
+   "start_ms": 762220,
+   "end_ms": 765660,
+   "cue_index": [
+    150
+   ]
+  },
+  {
+   "ja": "本当に昔からうざったいわね",
+   "start_ms": 766820,
+   "end_ms": 769440,
+   "cue_index": [
+    151
+   ]
+  },
+  {
+   "ja": "お茶会に参加して気づいたらどこかに行って",
+   "start_ms": 774240,
+   "end_ms": 778980,
+   "cue_index": [
+    152
+   ]
+  },
+  {
+   "ja": "今度は月?",
+   "start_ms": 779620,
+   "end_ms": 780880,
+   "cue_index": [
+    153
+   ]
+  },
+  {
+   "ja": "ファデュイで君やアルレッキーノ",
+   "start_ms": 786040,
+   "end_ms": 789860,
+   "cue_index": [
+    154
+   ]
+  },
+  {
+   "ja": "それからロザリンと一緒に過ごした日々は",
+   "start_ms": 790580,
+   "end_ms": 794160,
+   "cue_index": [
+    155
+   ]
+  },
+  {
+   "ja": "私が一番好きな時間だよその思い出は忘れない",
+   "start_ms": 795040,
+   "end_ms": 801020,
+   "cue_index": [
+    156,
+    157
+   ]
+  },
+  {
+   "ja": "そして今この瞬間も",
+   "start_ms": 802840,
+   "end_ms": 805380,
+   "cue_index": [
+    158
+   ]
+  },
+  {
+   "ja": "どこにいてもずっと友達だよね",
+   "start_ms": 808820,
+   "end_ms": 813300,
+   "cue_index": [
+    159
+   ]
+  },
+  {
+   "ja": "ふん、誰があなたなんかと",
+   "start_ms": 814200,
+   "end_ms": 817040,
+   "cue_index": [
+    160
+   ]
+  },
+  {
+   "ja": "私、きっとまたサンドローネに会いたくなる",
+   "start_ms": 824600,
+   "end_ms": 828840,
+   "cue_index": [
+    161
+   ]
+  },
+  {
+   "ja": "何してんだ!",
+   "start_ms": 838920,
+   "end_ms": 840260,
+   "cue_index": [
+    162
+   ]
+  },
+  {
+   "ja": "さようなら、サンドローネ",
+   "start_ms": 842080,
+   "end_ms": 844960,
+   "cue_index": [
+    163
+   ]
+  },
+  {
+   "ja": "もうじゃないだろう",
+   "start_ms": 872060,
+   "end_ms": 873460,
+   "cue_index": [
+    164
+   ]
+  },
+  {
+   "ja": "ゲオゲオゲオ",
+   "start_ms": 876300,
+   "end_ms": 878860,
+   "cue_index": [
+    165,
+    166,
+    167
+   ]
+  },
+  {
+   "ja": "後悔するって後悔するってコロンビーナ私も",
+   "start_ms": 888940,
+   "end_ms": 907620,
+   "cue_index": [
+    168,
+    169,
+    170
+   ]
+  },
+  {
+   "ja": "これでサンドローネ実装しなかったら俺が見本屋の社員と会った時には俺がコツンしに行くわ",
+   "start_ms": 918020,
+   "end_ms": 923440,
+   "cue_index": [
+    171,
+    172
+   ]
+  },
+  {
+   "ja": "実はオイラたちお前のためにこれを作ったんだ",
+   "start_ms": 925060,
+   "end_ms": 929160,
+   "cue_index": [
+    173
+   ]
+  },
+  {
+   "ja": "じゃじゃーん",
+   "start_ms": 929760,
+   "end_ms": 931120,
+   "cue_index": [
+    174
+   ]
+  },
+  {
+   "ja": "それって",
+   "start_ms": 933140,
+   "end_ms": 933820,
+   "cue_index": [
+    175
+   ]
+  },
+  {
+   "ja": "みんなで書いた鬼月の夜のカードだ",
+   "start_ms": 934920,
+   "end_ms": 938040,
+   "cue_index": [
+    176,
+    177
+   ]
+  },
+  {
+   "ja": "でもすごすぎてさこの後が怖いんだよねなんかもうここに全てをギュッて詰め込んだら彼女のようなさ",
+   "start_ms": 945540,
+   "end_ms": 951360,
+   "cue_index": [
+    178,
+    179,
+    180,
+    181
+   ]
+  },
+  {
+   "ja": "この星には",
+   "start_ms": 951880,
+   "end_ms": 952720,
+   "cue_index": [
+    182
+   ]
+  },
+  {
+   "ja": "コロンビーナを思ってる友達がいることを",
+   "start_ms": 953460,
+   "end_ms": 955900,
+   "cue_index": [
+    183
+   ]
+  },
+  {
+   "ja": "忘れないで",
+   "start_ms": 956420,
+   "end_ms": 957260,
+   "cue_index": [
+    184
+   ]
+  },
+  {
+   "ja": "うんうん、忘れないよ。",
+   "start_ms": 958800,
+   "end_ms": 961000,
+   "cue_index": [
+    185,
+    186
+   ]
+  },
+  {
+   "ja": "みんな、私のためにいろいろしてくれてありがとう。",
+   "start_ms": 962120,
+   "end_ms": 966380,
+   "cue_index": [
+    187
+   ]
+  },
+  {
+   "ja": "あと、これも覚えておいてほしいな。",
+   "start_ms": 968940,
+   "end_ms": 972380,
+   "cue_index": [
+    188
+   ]
+  },
+  {
+   "ja": "昼も夜も、月光が我らを結ばん。",
+   "start_ms": 972380,
+   "end_ms": 978460,
+   "cue_index": [
+    188
+   ]
+  },
+  {
+   "ja": "ふぅ、じゃあ、さようなら、みんな。",
+   "start_ms": 979240,
+   "end_ms": 985400,
+   "cue_index": [
+    189
+   ]
+  },
+  {
+   "ja": "うわーまじー",
+   "start_ms": 989940,
+   "end_ms": 991380,
+   "cue_index": [
+    190
+   ]
+  },
+  {
+   "ja": "またねーコロンビーナ あったねー",
+   "start_ms": 1014940,
+   "end_ms": 1019540,
+   "cue_index": [
+    191,
+    192
+   ]
+  },
+  {
+   "ja": "ん",
+   "start_ms": 1046880,
+   "end_ms": 1047040,
+   "cue_index": [
+    193
+   ]
+  },
+  {
+   "ja": "つっ 待っ不穏なんだけど何それ",
+   "start_ms": 1049340,
+   "end_ms": 1052740,
+   "cue_index": [
+    194
+   ]
+  },
+  {
+   "ja": "好きは我々どこを打ちかけたのかはっはっは",
+   "start_ms": 1058040,
+   "end_ms": 1065340,
+   "cue_index": [
+    195,
+    196
+   ]
+  },
+  {
+   "ja": "ここに3つの月が集まり",
+   "start_ms": 1073220,
+   "end_ms": 1075980,
+   "cue_index": [
+    197
+   ]
+  },
+  {
+   "ja": "実験は最終段階に入る",
+   "start_ms": 1076520,
+   "end_ms": 1079440,
+   "cue_index": [
+    198
+   ]
+  },
+  {
+   "ja": "いややっぱ取りに来たか",
+   "start_ms": 1088320,
+   "end_ms": 1090160,
+   "cue_index": [
+    199
+   ]
+  },
+  {
+   "ja": "テイワットの原初の力はもともと光天の玉座のものなどではない",
+   "start_ms": 1096800,
+   "end_ms": 1102720,
+   "cue_index": [
+    200,
+    201
+   ]
+  },
+  {
+   "ja": "そして今",
+   "start_ms": 1103700,
+   "end_ms": 1104580,
+   "cue_index": [
+    202
+   ]
+  },
+  {
+   "ja": "私のものとなった",
+   "start_ms": 1105980,
+   "end_ms": 1107900,
+   "cue_index": [
+    203
+   ]
+  },
+  {
+   "ja": "え、",
+   "start_ms": 1111360,
+   "end_ms": 1111800,
+   "cue_index": [
+    204
+   ]
+  },
+  {
+   "ja": "唯一動ける",
+   "start_ms": 1113480,
+   "end_ms": 1114200,
+   "cue_index": [
+    205
+   ]
+  },
+  {
+   "ja": "いやマジ頑張れ",
+   "start_ms": 1115220,
+   "end_ms": 1116340,
+   "cue_index": [
+    206
+   ]
+  },
+  {
+   "ja": "いや悪くない悪くない",
+   "start_ms": 1124540,
+   "end_ms": 1125620,
+   "cue_index": [
+    207
+   ]
+  },
+  {
+   "ja": "なだれ強くなった力見せつけたれ",
+   "start_ms": 1129940,
+   "end_ms": 1131720,
+   "cue_index": [
+    208
+   ]
+  },
+  {
+   "ja": "それを本編でもやれ",
+   "start_ms": 1147480,
+   "end_ms": 1148760,
+   "cue_index": [
+    209
+   ]
+  },
+  {
+   "ja": "宇宙じゃないそれ",
+   "start_ms": 1156040,
+   "end_ms": 1157080,
+   "cue_index": [
+    210
+   ]
+  },
+  {
+   "ja": "戦闘中",
+   "start_ms": 1189840,
+   "end_ms": 1192660,
+   "cue_index": [
+    211
+   ]
+  },
+  {
+   "ja": "クロンビーナ",
+   "start_ms": 1206340,
+   "end_ms": 1207100,
+   "cue_index": [
+    212
+   ]
+  },
+  {
+   "ja": "え待ってない待ってない",
+   "start_ms": 1209920,
+   "end_ms": 1211940,
+   "cue_index": [
+    213,
+    214
+   ]
+  },
+  {
+   "ja": "勝ったーれ",
+   "start_ms": 1216940,
+   "end_ms": 1218380,
+   "cue_index": [
+    215
+   ]
+  },
+  {
+   "ja": "いやでもこれは終わらんよな野田さんででも博士と完全に決着つけるんかな次つけてほしい",
+   "start_ms": 1218920,
+   "end_ms": 1225900,
+   "cue_index": [
+    216,
+    217,
+    218,
+    219,
+    220,
+    221
+   ]
+  },
+  {
+   "ja": "クロンビーナが私の本当の名前になるなんて思ってもみなかった",
+   "start_ms": 1226540,
+   "end_ms": 1233580,
+   "cue_index": [
+    222,
+    223,
+    224
+   ]
+  },
+  {
+   "ja": "それはこれは、ファデュイのコードネームから、友達の呼ぶ私になったの。",
+   "start_ms": 1234680,
+   "end_ms": 1241680,
+   "cue_index": [
+    225,
+    226
+   ]
+  },
+  {
+   "ja": "あと、これも覚えておいてほしいな。",
+   "start_ms": 1243800,
+   "end_ms": 1246360,
+   "cue_index": [
+    227
+   ]
+  },
+  {
+   "ja": "昼も、夜も、月光が我らを結ばん。",
+   "start_ms": 1248600,
+   "end_ms": 1254640,
+   "cue_index": [
+    228
+   ]
+  },
+  {
+   "ja": "ここで終わるのかよ",
+   "start_ms": 1272460,
+   "end_ms": 1274400,
+   "cue_index": [
+    229
+   ]
+  },
+  {
+   "ja": "いやー",
+   "start_ms": 1288640,
+   "end_ms": 1289560,
+   "cue_index": [
+    230
+   ]
+  },
+  {
+   "ja": "今年最後に残った原神の思い出が虚無だとやってくれるじゃないか来年頼むぞみほろさんよハッピーエンド期待してるからだ",
+   "start_ms": 1290280,
+   "end_ms": 1299460,
+   "cue_index": [
+    231,
+    232,
+    233,
+    234,
+    235,
+    236
+   ]
+  },
+  {
+   "ja": "ちゃんと博士と決着つけてほしい",
+   "start_ms": 1299460,
+   "end_ms": 1301720,
+   "cue_index": [
+    237
+   ]
+  },
+  {
+   "ja": "俺はそれを望みます",
+   "start_ms": 1302700,
+   "end_ms": 1304160,
+   "cue_index": [
+    238
+   ]
+  },
+  {
+   "ja": "というわけで",
+   "start_ms": 1304880,
+   "end_ms": 1305600,
+   "cue_index": [
+    239
+   ]
+  },
+  {
+   "ja": "お疲れ様でした",
+   "start_ms": 1306840,
+   "end_ms": 1307720,
+   "cue_index": [
+    240
+   ]
+  }
+ ],
+ "chunks": [
+  {
+   "index": 0,
+   "first_unit": 0,
+   "before": 0,
+   "target": 20,
+   "after": 6
+  },
+  {
+   "index": 1,
+   "first_unit": 20,
+   "before": 10,
+   "target": 20,
+   "after": 6
+  },
+  {
+   "index": 2,
+   "first_unit": 40,
+   "before": 10,
+   "target": 20,
+   "after": 6
+  },
+  {
+   "index": 3,
+   "first_unit": 60,
+   "before": 10,
+   "target": 20,
+   "after": 6
+  },
+  {
+   "index": 4,
+   "first_unit": 80,
+   "before": 10,
+   "target": 20,
+   "after": 6
+  },
+  {
+   "index": 5,
+   "first_unit": 100,
+   "before": 10,
+   "target": 20,
+   "after": 6
+  },
+  {
+   "index": 6,
+   "first_unit": 120,
+   "before": 10,
+   "target": 20,
+   "after": 6
+  },
+  {
+   "index": 7,
+   "first_unit": 140,
+   "before": 10,
+   "target": 20,
+   "after": 6
+  },
+  {
+   "index": 8,
+   "first_unit": 160,
+   "before": 10,
+   "target": 7,
+   "after": 0
+  }
+ ],
+ "log": [
+  "segmented 241 cues into 167 units",
+  "pass 1: analysing 167 units (2591 chars)",
+  "pass 1: attempt 1 came back empty",
+  "pass 1: 2 names, 1 terms, 0 ASR corrections",
+  "chunk 1/9: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 1/9: retrying 20 missing line(s)",
+  "chunk 1/9 retry 1: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 1/9: retrying 20 missing line(s)",
+  "chunk 1/9: 19/20 lines",
+  "chunk 2/9: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 2/9: retrying 20 missing line(s)",
+  "chunk 2/9 retry 1: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 2/9: retrying 20 missing line(s)",
+  "chunk 2/9: 18/20 lines",
+  "chunk 3/9: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 3/9: retrying 20 missing line(s)",
+  "chunk 3/9 retry 1: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 3/9: retrying 20 missing line(s)",
+  "chunk 3/9: 19/20 lines",
+  "chunk 4/9: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 4/9: retrying 20 missing line(s)",
+  "chunk 4/9 retry 1: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 4/9: retrying 20 missing line(s)",
+  "chunk 4/9: 18/20 lines",
+  "chunk 5/9: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 5/9: retrying 20 missing line(s)",
+  "chunk 5/9 retry 1: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 5/9: retrying 20 missing line(s)",
+  "chunk 5/9: 19/20 lines",
+  "chunk 6/9: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 6/9: retrying 20 missing line(s)",
+  "chunk 6/9 retry 1: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 6/9: retrying 20 missing line(s)",
+  "chunk 6/9: 18/20 lines",
+  "chunk 7/9: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 7/9: retrying 20 missing line(s)",
+  "chunk 7/9 retry 1: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 7/9: retrying 20 missing line(s)",
+  "chunk 7/9: 19/20 lines",
+  "chunk 8/9: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 8/9: retrying 20 missing line(s)",
+  "chunk 8/9 retry 1: rejected 20 line(s) whose copied Japanese did not match",
+  "chunk 8/9: retrying 20 missing line(s)",
+  "chunk 8/9: 18/20 lines",
+  "chunk 9/9: rejected 7 line(s) whose copied Japanese did not match",
+  "chunk 9/9: retrying 7 missing line(s)",
+  "chunk 9/9 retry 1: rejected 7 line(s) whose copied Japanese did not match",
+  "chunk 9/9: retrying 7 missing line(s)",
+  "chunk 9/9: 7/7 lines"
+ ],
+ "failures": [
+  "chunk 1/9: 1 of 20 lines still missing after 2 retries",
+  "chunk 2/9: 2 of 20 lines still missing after 2 retries",
+  "chunk 3/9: 1 of 20 lines still missing after 2 retries",
+  "chunk 4/9: 2 of 20 lines still missing after 2 retries",
+  "chunk 5/9: 1 of 20 lines still missing after 2 retries",
+  "chunk 6/9: 2 of 20 lines still missing after 2 retries",
+  "chunk 7/9: 1 of 20 lines still missing after 2 retries",
+  "chunk 8/9: 2 of 20 lines still missing after 2 retries"
+ ],
+ "translations": [
+  "line 1: lorem (22)",
+  "line 2: lorem lorem (7)",
+  "line 3: lorem lorem lorem (10)",
+  "line 4: lorem lorem lorem lorem (39)",
+  "line 5: lorem lorem lorem lorem lorem (10)",
+  "line 6: lorem lorem lorem lorem lorem lorem (58)",
+  "line 7: lorem lorem lorem lorem lorem lorem lorem (8)",
+  "line 8: lorem lorem lorem lorem lorem lorem lorem lorem (39)",
+  "line 9: lorem lorem lorem lorem lorem lorem lorem lorem lorem (8)",
+  "line 10: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (22)",
+  "line 11: (9)",
+  "line 12: lorem (6)",
+  "",
+  "line 14: lorem lorem lorem (23)",
+  "line 15: lorem lorem lorem lorem (6)",
+  "line 16: lorem lorem lorem lorem lorem (6)",
+  "line 17: lorem lorem lorem lorem lorem lorem (4)",
+  "line 18: lorem lorem lorem lorem lorem lorem lorem (6)",
+  "line 19: lorem lorem lorem lorem lorem lorem lorem lorem (7)",
+  "line 20: lorem lorem lorem lorem lorem lorem lorem lorem lorem (3)",
+  "line 21: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (13)",
+  "line 22: (5)",
+  "line 23: lorem (3)",
+  "line 24: lorem lorem (4)",
+  "line 25: lorem lorem lorem (14)",
+  "",
+  "line 27: lorem lorem lorem lorem lorem (6)",
+  "line 28: lorem lorem lorem lorem lorem lorem (8)",
+  "line 29: lorem lorem lorem lorem lorem lorem lorem (10)",
+  "line 30: lorem lorem lorem lorem lorem lorem lorem lorem (10)",
+  "line 31: lorem lorem lorem lorem lorem lorem lorem lorem lorem (28)",
+  "line 32: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (8)",
+  "line 33: (8)",
+  "line 34: lorem (2)",
+  "line 35: lorem lorem (6)",
+  "line 36: lorem lorem lorem (7)",
+  "line 37: lorem lorem lorem lorem (10)",
+  "line 38: lorem lorem lorem lorem lorem (20)",
+  "",
+  "line 40: lorem lorem lorem lorem lorem lorem lorem (10)",
+  "line 41: lorem lorem lorem lorem lorem lorem lorem lorem (34)",
+  "line 42: lorem lorem lorem lorem lorem lorem lorem lorem lorem (7)",
+  "line 43: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (1)",
+  "line 44: (11)",
+  "line 45: lorem (1)",
+  "line 46: lorem lorem (29)",
+  "line 47: lorem lorem lorem (9)",
+  "line 48: lorem lorem lorem lorem (3)",
+  "line 49: lorem lorem lorem lorem lorem (6)",
+  "line 50: lorem lorem lorem lorem lorem lorem (7)",
+  "line 51: lorem lorem lorem lorem lorem lorem lorem (9)",
+  "",
+  "line 53: lorem lorem lorem lorem lorem lorem lorem lorem lorem (2)",
+  "line 54: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (6)",
+  "line 55: (17)",
+  "line 56: lorem (5)",
+  "line 57: lorem lorem (44)",
+  "line 58: lorem lorem lorem (8)",
+  "line 59: lorem lorem lorem lorem (5)",
+  "line 60: lorem lorem lorem lorem lorem (11)",
+  "line 61: lorem lorem lorem lorem lorem lorem (13)",
+  "line 62: lorem lorem lorem lorem lorem lorem lorem (10)",
+  "line 63: lorem lorem lorem lorem lorem lorem lorem lorem (3)",
+  "line 64: lorem lorem lorem lorem lorem lorem lorem lorem lorem (30)",
+  "",
+  "line 66: (10)",
+  "line 67: lorem (4)",
+  "line 68: lorem lorem (59)",
+  "line 69: lorem lorem lorem (8)",
+  "line 70: lorem lorem lorem lorem (9)",
+  "line 71: lorem lorem lorem lorem lorem (9)",
+  "line 72: lorem lorem lorem lorem lorem lorem (11)",
+  "line 73: lorem lorem lorem lorem lorem lorem lorem (2)",
+  "line 74: lorem lorem lorem lorem lorem lorem lorem lorem (15)",
+  "line 75: lorem lorem lorem lorem lorem lorem lorem lorem lorem (32)",
+  "line 76: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (31)",
+  "line 77: (13)",
+  "",
+  "line 79: lorem lorem (64)",
+  "line 80: lorem lorem lorem (19)",
+  "line 81: lorem lorem lorem lorem (57)",
+  "line 82: lorem lorem lorem lorem lorem (52)",
+  "line 83: lorem lorem lorem lorem lorem lorem (60)",
+  "line 84: lorem lorem lorem lorem lorem lorem lorem (13)",
+  "line 85: lorem lorem lorem lorem lorem lorem lorem lorem (5)",
+  "line 86: lorem lorem lorem lorem lorem lorem lorem lorem lorem (15)",
+  "line 87: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (11)",
+  "line 88: (20)",
+  "line 89: lorem (5)",
+  "line 90: lorem lorem (2)",
+  "",
+  "line 92: lorem lorem lorem lorem (7)",
+  "line 93: lorem lorem lorem lorem lorem (20)",
+  "line 94: lorem lorem lorem lorem lorem lorem (22)",
+  "line 95: lorem lorem lorem lorem lorem lorem lorem (6)",
+  "line 96: lorem lorem lorem lorem lorem lorem lorem lorem (9)",
+  "line 97: lorem lorem lorem lorem lorem lorem lorem lorem lorem (7)",
+  "line 98: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (16)",
+  "line 99: (4)",
+  "line 100: lorem (31)",
+  "line 101: lorem lorem (16)",
+  "line 102: lorem lorem lorem (9)",
+  "line 103: lorem lorem lorem lorem (26)",
+  "",
+  "line 105: lorem lorem lorem lorem lorem lorem (13)",
+  "line 106: lorem lorem lorem lorem lorem lorem lorem (20)",
+  "line 107: lorem lorem lorem lorem lorem lorem lorem lorem (5)",
+  "line 108: lorem lorem lorem lorem lorem lorem lorem lorem lorem (15)",
+  "line 109: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (19)",
+  "line 110: (21)",
+  "line 111: lorem (9)",
+  "line 112: lorem lorem (14)",
+  "line 113: lorem lorem lorem (12)",
+  "line 114: lorem lorem lorem lorem (20)",
+  "line 115: lorem lorem lorem lorem lorem (6)",
+  "line 116: lorem lorem lorem lorem lorem lorem (12)",
+  "",
+  "line 118: lorem lorem lorem lorem lorem lorem lorem lorem (6)",
+  "line 119: lorem lorem lorem lorem lorem lorem lorem lorem lorem (20)",
+  "line 120: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (42)",
+  "line 121: (21)",
+  "line 122: lorem (6)",
+  "line 123: lorem lorem (4)",
+  "line 124: lorem lorem lorem (16)",
+  "line 125: lorem lorem lorem lorem (46)",
+  "line 126: lorem lorem lorem lorem lorem (5)",
+  "line 127: lorem lorem lorem lorem lorem lorem (19)",
+  "line 128: lorem lorem lorem lorem lorem lorem lorem (5)",
+  "line 129: lorem lorem lorem lorem lorem lorem lorem lorem (11)",
+  "",
+  "line 131: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (17)",
+  "line 132: (15)",
+  "line 133: lorem (17)",
+  "line 134: lorem lorem (6)",
+  "line 135: lorem lorem lorem (16)",
+  "line 136: lorem lorem lorem lorem (1)",
+  "line 137: lorem lorem lorem lorem lorem (15)",
+  "line 138: lorem lorem lorem lorem lorem lorem (20)",
+  "line 139: lorem lorem lorem lorem lorem lorem lorem (11)",
+  "line 140: lorem lorem lorem lorem lorem lorem lorem lorem (10)",
+  "line 141: lorem lorem lorem lorem lorem lorem lorem lorem lorem (11)",
+  "line 142: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (29)",
+  "",
+  "line 144: lorem (8)",
+  "line 145: lorem lorem (2)",
+  "line 146: lorem lorem lorem (5)",
+  "line 147: lorem lorem lorem lorem (7)",
+  "line 148: lorem lorem lorem lorem lorem (10)",
+  "line 149: lorem lorem lorem lorem lorem lorem (15)",
+  "line 150: lorem lorem lorem lorem lorem lorem lorem (9)",
+  "line 151: lorem lorem lorem lorem lorem lorem lorem lorem (8)",
+  "line 152: lorem lorem lorem lorem lorem lorem lorem lorem lorem (3)",
+  "line 153: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (6)",
+  "line 154: (11)",
+  "line 155: lorem (5)",
+  "",
+  "line 157: lorem lorem lorem (29)",
+  "line 158: lorem lorem lorem lorem (34)",
+  "line 159: lorem lorem lorem lorem lorem (17)",
+  "line 160: lorem lorem lorem lorem lorem lorem (16)",
+  "line 161: lorem lorem lorem lorem lorem lorem lorem (9)",
+  "line 162: lorem lorem lorem lorem lorem lorem lorem lorem (3)",
+  "line 163: lorem lorem lorem lorem lorem lorem lorem lorem lorem (56)",
+  "line 164: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (15)",
+  "line 165: (9)",
+  "line 166: lorem (6)",
+  "line 167: lorem lorem (7)"
+ ],
+ "srt_sha256": "7391c1dc8651a15628e1727494a7823dcb651234ab7aae48a672de40d3fb5cd1",
+ "prompt_sha256": [
+  "b921afd45c0efd9384524763724c3ba43b46837bc5ca405d0fcb6cd6ed387a09",
+  "b921afd45c0efd9384524763724c3ba43b46837bc5ca405d0fcb6cd6ed387a09",
+  "be49390fd41bf864b042b4b18ee22a439a1c0ce1d45b42fa048a2bcfe4703b8b",
+  "be49390fd41bf864b042b4b18ee22a439a1c0ce1d45b42fa048a2bcfe4703b8b",
+  "be49390fd41bf864b042b4b18ee22a439a1c0ce1d45b42fa048a2bcfe4703b8b",
+  "884ed8d072d40b6e6690c76ceb43bfaf15f6904e21c2823d7e684b9c46a6f992",
+  "884ed8d072d40b6e6690c76ceb43bfaf15f6904e21c2823d7e684b9c46a6f992",
+  "884ed8d072d40b6e6690c76ceb43bfaf15f6904e21c2823d7e684b9c46a6f992",
+  "a787493177d0835f84f940b19e797e7dc8ee07d640b4885fd4094cc7a14cc445",
+  "a787493177d0835f84f940b19e797e7dc8ee07d640b4885fd4094cc7a14cc445",
+  "a787493177d0835f84f940b19e797e7dc8ee07d640b4885fd4094cc7a14cc445",
+  "b2ced9d855c8eb057ccf26fd4d31f83648908d0a894d18d9916de0599ec68686",
+  "b2ced9d855c8eb057ccf26fd4d31f83648908d0a894d18d9916de0599ec68686",
+  "b2ced9d855c8eb057ccf26fd4d31f83648908d0a894d18d9916de0599ec68686",
+  "bdba7498b35390e3c6dc3f47a3998c9796575b49dd011fafad8b94269d3c00cb",
+  "bdba7498b35390e3c6dc3f47a3998c9796575b49dd011fafad8b94269d3c00cb",
+  "bdba7498b35390e3c6dc3f47a3998c9796575b49dd011fafad8b94269d3c00cb",
+  "ecbd374e77608afba7a86bfabf87c25315865f86aae9f49d7fc70466d8a870c6",
+  "ecbd374e77608afba7a86bfabf87c25315865f86aae9f49d7fc70466d8a870c6",
+  "ecbd374e77608afba7a86bfabf87c25315865f86aae9f49d7fc70466d8a870c6",
+  "911668063f5a18238281c42fbefcf1fd64d3663452004c2ffdaf163c60881240",
+  "911668063f5a18238281c42fbefcf1fd64d3663452004c2ffdaf163c60881240",
+  "911668063f5a18238281c42fbefcf1fd64d3663452004c2ffdaf163c60881240",
+  "10161b9fa2fd5cfdb756ee30b025aec4a4ef649908ca9b0f3ef8839a87fb2e76",
+  "10161b9fa2fd5cfdb756ee30b025aec4a4ef649908ca9b0f3ef8839a87fb2e76",
+  "10161b9fa2fd5cfdb756ee30b025aec4a4ef649908ca9b0f3ef8839a87fb2e76",
+  "aa7c963d0cd076840033b0dfda3eee180d0624a5114da024f3982619df53fbf6",
+  "aa7c963d0cd076840033b0dfda3eee180d0624a5114da024f3982619df53fbf6",
+  "aa7c963d0cd076840033b0dfda3eee180d0624a5114da024f3982619df53fbf6"
+ ],
+ "first_analysis_prompt": "You are preparing to translate a Japanese video transcript into English subtitles.\n\nBefore translating, read the whole transcript and build a reference sheet.\n\nVideo title: clip-sample\n\nTRANSCRIPT\nどうもみなさんこんばんはお待たせいたしました\nケンマシェです\nよろしくお願いします\nプレイス マドクライ ルナさん6幕やっていきたいと思いますよろしくお願いします\n少女どうなるかですね\n人生という長い旅路の中では家族や友人も時間とともに変化していくその人たちが違う名前であなたを呼んだとしても大事なのは\n名前自体じゃない\nその名前があなたを表しているという事実よそれとそれをあなたが認められるか否かね\nだから目を閉じて\n頭の中に月神のお嬢さんの後ろ姿を思い浮かべて\nさあ何て呼びかける\nコロンビーナ\nコロンビーナ\nじゃあコロンビーナがちゃんと名前になるってこと\n買ったのかな\n教えてくれる\n私の名前\nコロヴィーナ\nまだ見えてない\nうわっ\nこの名前が嫌いじゃないなら\n呼んだえっ\nうわー\n好きだよ\nだからこれからもそう呼んでね\n私の名前は\nコロンビーナ\nハイポステレニア\nめちゃめちゃ泣いてた\n好きだよって言った?\n気のせい名前か危ないわ危ない危ない完全に消えるとこだった\nまあ普通にデート\n私のより酸っぱい\nはい\n私のも食べて\nなんだか不思議\n自分の分が減ったのに\n心は別の何かで満たされたような気分だから\nこの感じも\nちゃんと覚えておくね\nお祭りで彼女とデートなんてしなくていいこれを超えられることはないだろ\nなにするんだ?\n顔\nやめなさい、レディえ!\n?\n思っ苦しいのに それにもしつけてるところを誰かに見られたら\n恥ずかしするだろう\nつける\nああああああ\nフッハハハハハ\nあれユーザーがいる\nえ?\nえ?\nさすがお父様\n頑張ったら食われないかなこれぐらい\nこれぐらい\nYouTubeで動画見てるときに下にアカウントが出てくるぐらいの大きさでいい俺なんてもう\n一番飛び込んでた\n俺は寸劇の\nエヴァシラ俺も持ってる\n祭りは全力で楽しめないとな\n心配してくれてたの?\nはぁ?\n勘違いしないでちょうだいバカのこと言ってくれちゃってるわけ?\n私のことが心配でファデュイだってバレないようにわざわざ髪飾りまでつけて会いに来てくれたんだよね\nアロンニアも連れずに\nかわいい\nあらかた目の前のかわいい猫見入り死ぬところでした右下にある猫見入りで葬祭されてなかったら死んでましたあこれもかわいいだ\n馬にとか欲しいな\nそうだサンドローネ\n一緒にあれで遊ぼう\nフロストフィンイルカ?\nうん\nハズレの歯を踏むと噛まれる遊び\nお手本を見せてあげるわこうやって踏めばいいのよ踏み方可愛くない?\nどれにしようかな考えろ考えろ大事なのは運営目線になるということ\n噛まれた後のサンドローネの\n多分ね\nイラストを用意されてると思うってなった時のことを考えるとやはり噛まれた後のサンドローネの姿を見せやすい位置で噛まれるということが\n大事になってくるつまり真ん中かおそらく\nここがやはりサンドローネが噛まれてやはり画像にしやすい正面から撮りやすいやはりここで噛まれてしまうと画像にしづらい\nコロンビーナとサンドローネの立ち位置でカメラの画角のアングルをこっちから持っていかないといけないんじゃね\nってなった場合この建物がちょっと邪魔になるんだよということで多分おそらくこの真ん中かこっちのどちらかが罠ですつまりここは\nセーブです皆さんいいですね\n本気だった\nいいよいい位置いい位置いい位置\nこれぐらい余裕なのだね\nやはり普段日頃から画角を意識しているほど\n向かいない\nうー\nうー\nもう一回勝負よ\nなるほど この子はハズレを感知できるのね\nコロンビーナが避けた歯を踏まなければ勝てるわ\nあれを避けた\nこの勝負もらったわ\nさあ 私の番ね\nこのゲームどこのバカが作ったのよ\n大丈夫?\n随分荒れてるけどこのゲームどこのバカが作ったのよふっ 大丈夫よ\nもしあれなら 君も私の頭を叩く?\nそんな必要ないわよ\n何回か叩いていいよ だって何度も負けちゃったんだから\nうっ 必要ないって言っているでしょ\n本当に昔からうざったいわね\nお茶会に参加して気づいたらどこかに行って\n今度は月?\nファデュイで君やアルレッキーノ\nそれからロザリンと一緒に過ごした日々は\n私が一番好きな時間だよその思い出は忘れない\nそして今この瞬間も\nどこにいてもずっと友達だよね\nふん、誰があなたなんかと\n私、きっとまたサンドローネに会いたくなる\n何してんだ!\nさようなら、サンドローネ\nもうじゃないだろう\nゲオゲオゲオ\n後悔するって後悔するってコロンビーナ私も\nこれでサンドローネ実装しなかったら俺が見本屋の社員と会った時には俺がコツンしに行くわ\n実はオイラたちお前のためにこれを作ったんだ\nじゃじゃーん\nそれって\nみんなで書いた鬼月の夜のカードだ\nでもすごすぎてさこの後が怖いんだよねなんかもうここに全てをギュッて詰め込んだら彼女のようなさ\nこの星には\nコロンビーナを思ってる友達がいることを\n忘れないで\nうんうん、忘れないよ。\nみんな、私のためにいろいろしてくれてありがとう。\nあと、これも覚えておいてほしいな。\n昼も夜も、月光が我らを結ばん。\nふぅ、じゃあ、さようなら、みんな。\nうわーまじー\nまたねーコロンビーナ あったねー\nん\nつっ 待っ不穏なんだけど何それ\n好きは我々どこを打ちかけたのかはっはっは\nここに3つの月が集まり\n実験は最終段階に入る\nいややっぱ取りに来たか\nテイワットの原初の力はもともと光天の玉座のものなどではない\nそして今\n私のものとなった\nえ、\n唯一動ける\nいやマジ頑張れ\nいや悪くない悪くない\nなだれ強くなった力見せつけたれ\nそれを本編でもやれ\n宇宙じゃないそれ\n戦闘中\nクロンビーナ\nえ待ってない待ってない\n勝ったーれ\nいやでもこれは終わらんよな野田さんででも博士と完全に決着つけるんかな次つけてほしい\nクロンビーナが私の本当の名前になるなんて思ってもみなかった\nそれはこれは、ファデュイのコードネームから、友達の呼ぶ私になったの。\nあと、これも覚えておいてほしいな。\n昼も、夜も、月光が我らを結ばん。\nここで終わるのかよ\nいやー\n今年最後に残った原神の思い出が虚無だとやってくれるじゃないか来年頼むぞみほろさんよハッピーエンド期待してるからだ\nちゃんと博士と決着つけてほしい\n俺はそれを望みます\nというわけで\nお疲れ様でした\n\nProduce JSON with exactly these keys:\n\n{\n  \"setting\": \"One or two sentences: what is happening, what kind of video, what is being played or discussed. Be specific — this is used to disambiguate homophones later.\",\n  \"speakers\": \"Who is talking. Note especially whether anyone refers to themselves in the third person by name or nickname, which is common for streamers.\",\n  \"names\": { \"japanese term\": \"how to render it in English, consistently\" },\n  \"terms\": { \"japanese term\": \"English meaning IN THIS CONTEXT, not the dictionary default\" },\n  \"asr_corrections\": { \"misrecognised form\": \"what was almost certainly said, and why\" },\n  \"register\": \"How this speaker sounds, and what English register matches. One or two sentences.\"\n}\n\nGuidance:\n- \"terms\" is for words whose ordinary dictionary sense would be wrong here. For example 配信 is \"stream\", not \"delivery\", when the speaker is a streamer.\n- \"asr_corrections\" is for speech-recognition errors you can identify from context. Japanese homophones are the usual cause. Only list ones you are confident about.\n- If a category is empty, use an empty object. Do not invent entries.\n- Output only the JSON object. No preamble, no code fence.\n\nHard limits — a reply that breaks these is useless:\n- **This is a reference sheet, NOT a translation.** Do not translate the transcript. Do not add an entry per line.\n- Keys in \"names\", \"terms\" and \"asr_corrections\" must be single words or short phrases. Never a whole sentence or a whole line of dialogue.\n- At most 12 entries in \"names\", 15 in \"terms\", 10 in \"asr_corrections\". Choose the ones that matter most and leave the rest out.\n- Keep the whole reply under 2000 characters.",
+ "first_translation_prompt": "Translate Japanese video dialogue into English subtitles.\n\nREFERENCE SHEET\n{\n  \"setting\": \"A streamer reacts to a story cutscene in a game.\",\n  \"speakers\": \"One streamer, plus in-game characters.\",\n  \"names\": {\n    \"コロンビーナ\": \"Columbina\",\n    \"マシ\": \"Mashi\"\n  },\n  \"terms\": {\n    \"配信\": \"stream\"\n  },\n  \"asr_corrections\": {},\n  \"register\": \"Casual, energetic.\"\n}\n\n\nCONTEXT — the lines immediately after (do not translate). Use these: in Japanese, what comes next often reveals who or what the current line is about.\nこの名前が嫌いじゃないなら\n呼んだえっ\nうわー\n好きだよ\nだからこれからもそう呼んでね\n私の名前は\n\nLINES TO TRANSLATE\n1\tどうもみなさんこんばんはお待たせいたしました\n2\tケンマシェです\n3\tよろしくお願いします\n4\tプレイス マドクライ ルナさん6幕やっていきたいと思いますよろしくお願いします\n5\t少女どうなるかですね\n6\t人生という長い旅路の中では家族や友人も時間とともに変化していくその人たちが違う名前であなたを呼んだとしても大事なのは\n7\t名前自体じゃない\n8\tその名前があなたを表しているという事実よそれとそれをあなたが認められるか否かね\n9\tだから目を閉じて\n10\t頭の中に月神のお嬢さんの後ろ姿を思い浮かべて\n11\tさあ何て呼びかける\n12\tコロンビーナ\n13\tコロンビーナ\n14\tじゃあコロンビーナがちゃんと名前になるってこと\n15\t買ったのかな\n16\t教えてくれる\n17\t私の名前\n18\tコロヴィーナ\n19\tまだ見えてない\n20\tうわっ\n\nRules:\n1. Japanese omits subjects constantly and has no verb agreement to recover them from. Decide who or what each line is about using the context above and the reference sheet. Do not default to \"I\" — it is frequently something on screen, or the person being spoken to.\n2. Japanese puts negation, tense and politeness at the END of a clause. If a line's meaning depends on a clause that finishes in a later line, translate it so the pair reads correctly together. Never assert the opposite of what was meant.\n3. Some lines are sentence fragments. Translate a fragment as a fragment that joins onto its neighbours. Do not inflate one into a standalone sentence, and never read a grammatical ending as a name.\n4. Use the reference sheet for names and terms, every time, without variation.\n5. Apply the ASR corrections from the reference sheet where the misrecognised form appears.\n6. Match the register on the reference sheet. Keep it natural spoken English, not literal glosses.\n7. Never invent content that is not in the source. If a line is genuinely unclear, translate the part you are sure of.\n8. Subtitles are read at speed and get two lines on screen. Keep each translation close to the length of its Japanese source and never longer than about 100 characters. Do not explain, expand, add background, or spell out what is merely implied — a line that needs a footnote should still be translated as the line, not the footnote.\n9. Translate ONLY the numbered lines. The context sections are for understanding; never fold their content into an answer.\n10. Output plain sentences. No leading or trailing ellipses, no surrounding quotation marks, no speaker labels.\n\nReturn JSON mapping each line number to an object holding that line's Japanese, copied exactly, and its English translation, and nothing else:\n\n{\"1\": {\"ja\": \"どうもみなさんこんばんはお待たせいたしました\", \"en\": \"...\"}, \"2\": {\"ja\": \"ケンマシェです\", \"en\": \"...\"}}\n\nEvery number listed above must appear exactly once, with its own Japanese copied into \"ja\". Each \"en\" translates only the Japanese in its own \"ja\". When a sentence runs across several lines, split the English at the same places. Never move words to a neighbouring line, and never leave a line's \"en\" empty because its meaning was folded into another line. No preamble, no code fence."
+}

@@ -40,7 +40,11 @@ Details that took measuring to get right:
 - **Series glossaries.** With a glossary, a character is translated the same
   way every episode. Fix a name once in the glossary file and it stays fixed.
 - **Interruptions are safe.** Progress is saved every ~10 minutes of audio and
-  after every translation chunk. Stopping is really pausing.
+  after every translation chunk. Stopping is really pausing. Audio is
+  streamed, so a 10-hour archive needs no more memory than a 10-minute clip.
+- **Optional self-check.** `--check` has a model confirm which line each
+  English subtitle belongs to, and re-translates any run that landed on a
+  neighbour.
 
 The measurements behind each decision, including the ideas that were tried and
 dropped, are in [docs/benchmarks.md](docs/benchmarks.md).
@@ -94,6 +98,7 @@ whisper-subs video.mp4 --ja-only     # Japanese only; Ollama not needed
 whisper-subs ep02.mp4 --glossary my-show   # keep names consistent across a series
 whisper-subs video.ja.json           # translate again without re-transcribing
 whisper-subs video.mp4 --fast        # large-v3-turbo: ~4x faster transcription, weaker on rare words
+whisper-subs video.mp4 --check       # afterwards, find and fix lines translated onto the wrong subtitle
 ```
 
 Run the same command again after an interruption and it resumes. `--force`
@@ -111,8 +116,9 @@ it there. Existing entries always win when a new file's findings are merged in.
   text is most likely. The filters catch the known phrases; `--vad` skips
   non-speech entirely, at the cost of losing quiet speech.
 - **Songs** are best effort: Whisper misses verses and invents credits.
-- **Line shifts are fixed but not measured.** Nothing yet detects a
-  translation on the wrong line automatically.
+- **Very long lines stay long.** A subtitle only splits at a real pause
+  between clauses; dense continuous speech keeps one long subtitle rather
+  than being cut mid-sentence.
 
 ## Building
 

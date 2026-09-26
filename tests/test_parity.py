@@ -27,7 +27,7 @@ HERE = Path(__file__).parent
 GOLDEN = sorted((HERE / "parity" / "golden").glob("*.json"))
 
 # JS option names -> Python option names.
-OPTION_NAMES = {"gapMs": "gap_ms", "maxChars": "max_chars", "size": "size"}
+OPTION_NAMES = {"gapMs": "gap_ms", "maxChars": "max_chars", "size": "size", "echo": "echo"}
 
 GLOSSARY = {
     "setting": "A streamer reacts to a story cutscene in a game.",

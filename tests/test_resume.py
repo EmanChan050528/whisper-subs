@@ -13,7 +13,10 @@ from whisper_subs.transcribe import Options, plan_windows
 
 def test_windows_are_cut_in_pauses_and_the_last_is_not_tiny():
     speech = [(0, 598), (603, 1190), (1195, 1300)]
-    assert plan_windows(1300, speech, 600) == [(0.0, 600.5), (600.5, 1300)]
+    # The mark (600) falls inside the pause 598-603: cut right there.
+    assert plan_windows(1300, speech, 600) == [(0.0, 600.0), (600.0, 1300)]
+    # A pause just past the mark: its point nearest the mark, 0.25 s clear of speech.
+    assert plan_windows(1300, [(0, 604), (606, 1300)], 600)[0] == (0.0, 604.25)
     # 1300 s with a pause near 1200 would leave a 100 s tail: folded in instead.
     assert plan_windows(1300, [(0, 1199), (1201, 1300)], 600)[-1][1] == 1300
     # No pause anywhere near the mark: cut on the mark.
@@ -151,3 +154,28 @@ def test_missing_lines_keep_the_checkpoint_so_a_rerun_retries_only_them(tmp_path
     assert cli.main([str(src), "--size", "1"]) == 0
     assert sent == ["2\tいいえ"]                              # only the missing line
     assert not (tmp_path / "y.en.partial.json").exists()
+
+
+def test_streamed_audio_is_sample_identical_to_whole_file(tmp_path):
+    import av
+
+    from whisper_subs.audio import check, load, stream
+
+    path = tmp_path / "tone.wav"
+    rate, seconds = 44100, 2.5
+    t = np.arange(int(rate * seconds)) / rate
+    pcm = (np.sin(2 * np.pi * 440 * t) * 20000).astype(np.int16)
+    with av.open(str(path), "w") as out:
+        s = out.add_stream("pcm_s16le", rate=rate)
+        s.layout = "mono"
+        frame = av.AudioFrame.from_ndarray(pcm.reshape(1, -1), format="s16", layout="mono")
+        frame.rate = rate
+        for packet in s.encode(frame):
+            out.mux(packet)
+        for packet in s.encode():
+            out.mux(packet)
+
+    blocks = list(stream(path, block_s=1.0))
+    assert [len(b) for b in blocks] == [16000, 16000, 8000]   # fixed blocks, short last
+    assert np.array_equal(np.concatenate(blocks), load(path))
+    assert abs(check(path) - seconds) < 0.05

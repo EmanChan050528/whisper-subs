@@ -77,3 +77,28 @@ def test_whisper_preset_ends_units_at_cue_ends_but_merges_short_fragments():
         "人生という長い旅路の中ではその人たちが違う名前で呼んだとしてもそう"]
     assert [u["ja"] for u in segment(cues, WHISPER)] == [
         "人生という長い旅路の中では", "その人たちが違う名前で呼んだとしても", "そう"]
+
+
+def w(start, end, word):
+    return {"start": start, "end": end, "word": word, "p": 0.9}
+
+
+def test_a_stretched_last_word_no_longer_holds_the_subtitle_up():
+    # 「でした」 stretched over 6.7 s of music (measured on NSY6YHXbxtA)
+    cues = to_cues([{"start": 870.2, "end": 879.8, "text": "お疲れ様でした", "words": [
+        w(870.2, 871.6, "お疲れ"), w(871.6, 873.1, "様"), w(873.1, 879.8, "でした")]}])
+    assert cues[0]["t_ms"] == 870200 and cues[0]["dur_ms"] == 4400  # 873.1 + 1.5 - 870.2
+
+
+def test_long_cues_split_only_at_a_clause_break():
+    from whisper_subs.cues import _breakable, split_long
+
+    assert _breakable("見て", "日本") and _breakable("けど、", "今")
+    assert not _breakable("奥", "ゆかしい")        # mid-word, after kanji
+    assert not _breakable("ちょ", "っと")           # before a small kana
+    words = [w(0, 3, "私の話聞いて"), w(3.6, 5, "ますかって"), w(5, 8, "何回も言われました")]
+    # 8 s long. The 0.6 s pause after 聞いて (ending in hiragana) is a clause
+    # break, and both halves keep 6+ characters, so it splits there.
+    assert [len(p) for p in split_long(words)] == [1, 2]
+    dense = [w(0, 4, "やっぱり和歌にも見られる"), w(4.05, 8, "ような表現力")]
+    assert len(split_long(dense)) == 1           # no real pause: left whole

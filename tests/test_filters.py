@@ -52,3 +52,13 @@ def test_display_times():
     assert t[1] == (5000, 8917)               # wants 4 s, stops 2 frames before the next
     assert t[2] == (9000, 9517)               # gap closed, two frames left
     assert t[3][1] >= 12000 and t[4] is None  # never shortened below the speech
+
+
+def test_single_character_gap_fill_fragments_are_dropped():
+    segs = [{**seg("シ", nsp=0.3), "gap_fill": True},
+            {**seg("あー", nsp=0.3, start=1), "gap_fill": True},
+            {**seg("そうですね", nsp=0.3, start=2), "gap_fill": True},
+            seg("牛", nsp=0.1, start=3)]                      # main pass: kept
+    kept, dropped = clean(segs)
+    assert [s["text"] for s in kept] == ["そうですね", "牛"]
+    assert {d["dropped"] for d in dropped} == {"gap-fill fragment"}

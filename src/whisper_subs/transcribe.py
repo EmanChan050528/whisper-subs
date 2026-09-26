@@ -7,12 +7,12 @@ slow, GPU-hungry step and everything after it is cheap to iterate on.
 
 import gc
 import os
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass
 
 import numpy as np
 
-from whisper_subs.audio import SAMPLE_RATE
+from whisper_subs.audio import SAMPLE_RATE, blocks_of
 from whisper_subs.gpu import enable_cuda_dlls
 
 # Hugging Face's Xet transfer hung at 0 bytes on the first large-v3 download
@@ -145,49 +145,79 @@ def speech_map(audio: np.ndarray, threshold: float) -> list[tuple[float, float]]
                 threshold=threshold, min_silence_duration_ms=500, speech_pad_ms=200))]
 
 
+def _gaps(speech: list[tuple[float, float]], end: float) -> list[tuple[float, float]]:
+    """Non-speech stretches between (and around) speech, up to `end`."""
+    if not speech:
+        return [(0.0, end)]
+    inner = [(speech[i][1], speech[i + 1][0]) for i in range(len(speech) - 1)]
+    return [g for g in [(0.0, speech[0][0]), *inner, (speech[-1][1], end)] if g[1] > g[0]]
+
+
+def choose_cut(mark: float, gaps: list[tuple[float, float]], search_s: float,
+               after: float, margin: float = 0.25) -> float:
+    """The point inside a pause nearest `mark` (within search_s, and later than
+    `after`), at least `margin` from the speech either side, so no word
+    straddles the cut. In a short pause that is its middle; in a long silence,
+    the mark itself. With no pause nearby, the mark."""
+    best = None
+    for a, b in gaps:
+        pad = min(margin, (b - a) / 2)
+        t = min(max(mark, a + pad), b - pad)
+        if abs(t - mark) <= search_s and t > after + 1 and (best is None or
+                                                          abs(t - mark) < abs(best - mark)):
+            best = t
+    return round(mark if best is None else best, 3)
+
+
 def plan_windows(duration: float, speech: list[tuple[float, float]], window_s: float,
                  search_s: float = 60.0) -> list[tuple[float, float]]:
-    """Cut [0, duration] into ~window_s pieces, each cut in a pause.
-
-    Near every multiple of window_s, take the middle of the non-speech gap
-    closest to it (within `search_s`), so no word straddles a cut. Only if
-    there is no pause at all nearby does the cut fall on the mark itself.
-    """
-    gaps = [(speech[i][1], speech[i + 1][0]) for i in range(len(speech) - 1)]
-    if speech:
-        gaps = [(0.0, speech[0][0]), *gaps, (speech[-1][1], duration)]
-    cuts = []
+    """All the windows for a fully known file. transcribe() makes the same cuts
+    as the audio streams in; this is the whole-file view of that rule."""
+    gaps = _gaps(speech, duration)
+    edges = [0.0]
     mark = window_s
     while mark < duration - window_s / 4:  # no tiny last window
-        near = [(abs((a + b) / 2 - mark), (a + b) / 2) for a, b in gaps
-                if b > a and abs((a + b) / 2 - mark) <= search_s]
-        cut = min(near)[1] if near else mark
-        if not cuts or cut > cuts[-1] + 1:
-            cuts.append(round(cut, 3))
-        mark += window_s
-    edges = [0.0, *cuts, round(duration, 3)]
+        cut = choose_cut(mark, gaps, search_s, edges[-1])
+        if cut > edges[-1] + 1:
+            edges.append(cut)
+        mark = edges[-1] + window_s
+    edges.append(round(duration, 3))
     return [(edges[i], edges[i + 1]) for i in range(len(edges) - 1)]
 
 
 def transcribe(
-    audio: np.ndarray,
+    audio: np.ndarray | Iterable[np.ndarray],
     opts: Options,
     on_progress: Callable[[float, float], None] = lambda done, total: None,
     log: Callable[[str], None] = lambda msg: None,
     resume: dict | None = None,
     on_checkpoint: Callable[[dict], None] = lambda state: None,
     check_stop: Callable[[], None] = lambda: None,
+    duration: float | None = None,
 ) -> dict:
-    """Returns {"options", "duration", "segments": [...]} with times in seconds.
+    """Returns {"options", "duration", "windows", "segments": [...]}, times in s.
 
-    Works window by window (see Options.window_s). After each window,
-    `on_checkpoint(state)` receives a JSON-serialisable state; passing that
-    state back as `resume` skips the windows it has already done.
+    `audio` is a whole array, or blocks as they are decoded (audio.stream), so
+    a long file is never held in memory: each ~window_s window is transcribed
+    once enough audio has arrived to choose its cut, then dropped. `duration`
+    (for progress, and to avoid a tiny last window) is exact for an array and
+    the container's estimate for a stream.
+
+    After each window `on_checkpoint(state)` receives a JSON-serialisable
+    state; passing it back as `resume` skips windows already done, provided
+    the cuts come out the same (they do for the same file and options).
     `check_stop()` is called between segments; it stops the run by raising.
     """
-    device, compute = resolve_device(opts)
-    from faster_whisper import WhisperModel
+    if isinstance(audio, np.ndarray):
+        duration = len(audio) / SAMPLE_RATE
+        blocks: Iterable[np.ndarray] = blocks_of(audio)
+    else:
+        blocks = audio
+    total = duration or 0.0
+    window_s = opts.window_s
+    search_s = min(60.0, window_s / 2)
 
+    device, compute = resolve_device(opts)
     common = {
         "language": opts.language,
         "beam_size": opts.beam_size,
@@ -199,86 +229,133 @@ def transcribe(
         "log_prob_threshold": opts.log_prob_threshold,
         "hallucination_silence_threshold": opts.hallucination_silence_threshold,
     }
-    duration = len(audio) / SAMPLE_RATE
-    speech = speech_map(audio, opts.gap_fill_vad_threshold)
-    windows = plan_windows(duration, speech, opts.window_s)
+    saved = resume or {}
+    state = {"windows": [], "done": {}, "language": saved.get("language")}
+    model = None
+    buf = np.empty(0, dtype=np.float32)
+    buf_t0 = 0.0         # time of buf[0]
+    seen = 0.0           # seconds decoded so far
+    speech: list[tuple[float, float]] = []
+    win_start = 0.0
+    gap_stats = [0, 0.0, 0]  # stretches, seconds, recovered
+    diverged = False     # once a window differs from the checkpoint, none after can match
+    reused = 0
 
-    state = {"windows": [list(w) for w in windows], "done": {}, "language": None}
-    if resume and resume.get("windows") == state["windows"]:
-        state["done"] = dict(resume.get("done") or {})
-        state["language"] = resume.get("language")
-        if state["done"]:
-            log(f"resuming: {len(state['done'])} of {len(windows)} window(s) already done")
+    def at(t: float) -> int:
+        """Index in buf of time t."""
+        return round((t - buf_t0) * SAMPLE_RATE)
 
-    model = WhisperModel(opts.model, device=device, compute_type=compute)
-    try:
-        for i, (a, b) in enumerate(windows):
-            if str(i) in state["done"]:
-                on_progress(b, duration)
-                continue
-            piece = audio[int(a * SAMPLE_RATE):int(b * SAMPLE_RATE)]
+    def process(a: float, b: float) -> None:
+        nonlocal model, buf, buf_t0, diverged, reused
+        i = len(state["windows"])
+        key = str(i)
+        reusable = (not diverged and saved.get("windows", [])[i:i + 1] == [[a, b]]
+                    and key in (saved.get("done") or {}))
+        diverged = diverged or not reusable
+        reused += reusable
+        if reusable:
+            found = saved["done"][key]
+        else:
+            if model is None:
+                from faster_whisper import WhisperModel
+                model = WhisperModel(opts.model, device=device, compute_type=compute)
+            piece = buf[at(a):at(b)]
             segments, info = model.transcribe(
                 piece, vad_filter=opts.vad, vad_parameters={"threshold": opts.vad_threshold},
-                **common,
-            )
+                **common)
             found = []
             # The generator does the actual decoding; consuming it is the slow part.
-            for s in segments:
+            for seg in segments:
                 check_stop()
-                found.append(_segment_dict(s, offset=a))
-                on_progress(min(a + s.end, duration), duration)
-            state["done"][str(i)] = found
+                found.append(_segment_dict(seg, offset=a))
+                on_progress(min(a + seg.end, total or a + seg.end), total or b)
             state["language"] = state["language"] or info.language
+            if opts.gap_fill:
+                inside = [(max(x, a), min(y, b)) for x, y in speech if y > a and x < b]
+                found = _gap_fill(model, piece, a, found, inside, opts, common, gap_stats,
+                                  check_stop)
+        state["windows"].append([a, b])
+        state["done"][key] = found
+        if not reusable:
             on_checkpoint(state)
+        on_progress(b, max(total, b))
+        # Drop the audio this window used.
+        drop = at(b)
+        buf, buf_t0 = buf[drop:], buf_t0 + drop / SAMPLE_RATE
 
-        out = [s for i in range(len(windows)) for s in state["done"][str(i)]]
-        if opts.gap_fill:
-            out = _gap_fill(model, audio, out, speech, opts, common, log, check_stop)
+    try:
+        for block in blocks:
+            t = seen
+            seen += len(block) / SAMPLE_RATE
+            buf = np.concatenate([buf, block]) if buf.size else block
+            for x, y in speech_map(block, opts.gap_fill_vad_threshold):
+                x, y = x + t, y + t
+                if speech and x - speech[-1][1] < 0.05:  # one stretch across blocks
+                    speech[-1] = (speech[-1][0], y)
+                else:
+                    speech.append((x, y))
+            # A cut can be chosen once the audio reaches past its search range.
+            while seen - win_start >= window_s + search_s:
+                mark = win_start + window_s
+                if total and total - mark < window_s / 4:
+                    break  # no tiny last window; the tail joins this one
+                cut = choose_cut(mark, _gaps(speech, seen), search_s, win_start)
+                process(win_start, cut)
+                win_start = cut
+        if seen > win_start:
+            process(win_start, round(seen, 3))
     finally:
-        # Free VRAM before anything else (Ollama, later) wants it.
-        del model
-        gc.collect()
+        if model is not None:
+            # Free VRAM before anything else (Ollama, later) wants it.
+            del model
+            gc.collect()
 
+    if gap_stats[0]:
+        log(f"gap fill: re-transcribed {gap_stats[0]} stretch(es) of missed speech "
+            f"({gap_stats[1]:.0f}s), recovered {gap_stats[2]} segment(s)")
+    if reused:
+        log(f"resumed: {reused} of {len(state['windows'])} window(s) were already done")
     return {
         "options": {**asdict(opts), "device": device, "compute_type": compute},
         "language": state["language"],
-        "duration": round(duration, 3),
+        "duration": round(seen, 3),
         "windows": state["windows"],
-        "segments": out,
+        "segments": [seg for i in range(len(state["windows"])) for seg in state["done"][str(i)]],
     }
 
 
-def _gap_fill(model, audio, segments, speech, opts, common, log,
+def _gap_fill(model, piece, offset, segments, speech, opts, common, stats,
               check_stop=lambda: None) -> list[dict]:
-    """Second pass over speech the first pass skipped.
+    """Second pass, within one window, over speech the first pass skipped.
 
     Decoding a 30 s window of voice acting under music, Whisper sometimes jumps
     its timestamp past the speech: on NSY6YHXbxtA, 22% of the lines YouTube
     captioned had no words at all, and turning every skip threshold off changed
     nothing. Re-transcribing just those stretches, found with Silero VAD,
     recovers most of them (22% -> 10% missed) for ~30 s on a 22 min video.
+    Done per window while its audio is in memory; windows are cut in pauses,
+    so a stretch never straddles two.
     """
     words = sorted((w["start"], w["end"]) for s in segments for w in s["words"])
     holes = find_holes(speech, words, opts.gap_fill_min_s)
     if not holes:
         return segments
-    log(f"gap fill: re-transcribing {len(holes)} stretch(es) of missed speech, "
-        f"{sum(b - a for a, b in holes):.0f}s in total")
-
-    duration = len(audio) / SAMPLE_RATE
+    end = offset + len(piece) / SAMPLE_RATE
     added = []
     for a, b in holes:
         check_stop()
         # A second of padding gives Whisper context; words in the padding are
         # already transcribed, so only words inside the hole are kept.
-        a0, b0 = max(0.0, a - 1.0), min(duration, b + 1.0)
-        found, _ = model.transcribe(
-            audio[int(a0 * SAMPLE_RATE):int(b0 * SAMPLE_RATE)], vad_filter=False, **common)
+        a0, b0 = max(offset, a - 1.0), min(end, b + 1.0)
+        clip = piece[int((a0 - offset) * SAMPLE_RATE):int((b0 - offset) * SAMPLE_RATE)]
+        found, _ = model.transcribe(clip, vad_filter=False, **common)
         for s in found:
             seg = _segment_dict(s, offset=a0,
                                 keep=lambda ws, we, a=a, b=b: we > a - 0.2 and ws < b + 0.2)
             if seg:
                 seg["gap_fill"] = True
                 added.append(seg)
-    log(f"gap fill: recovered {len(added)} segment(s)")
+    stats[0] += len(holes)
+    stats[1] += sum(b - a for a, b in holes)
+    stats[2] += len(added)
     return sorted(segments + added, key=lambda s: s["start"])

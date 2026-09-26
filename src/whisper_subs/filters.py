@@ -28,7 +28,7 @@ PHANTOMS = [
     r"(?:次回|また次)の?(?:動画|配信)(?:で|も)?(?:お会いしましょう|会いましょう)?",
 ]
 _PHANTOM = re.compile("|".join(f"(?:{p})" for p in PHANTOMS))
-_STRIP = re.compile(r"[\s、。，．！？!?・「」『』…]")
+_STRIP = re.compile(r"[\s、。，．！？!?・「」『』…ー〜~]")
 
 #: A phantom phrase is dropped only with at least this no_speech_prob. The
 #: phantoms seen so far scored 0.83-0.92.
@@ -38,6 +38,13 @@ PHANTOM_MIN_NO_SPEECH = 0.5
 #: if it is long enough that the repetition cannot be a real そうそうそう.
 REPEAT_MIN_RUN = 3
 REPEAT_MIN_CHARS = 6
+
+
+def is_gap_fragment(segment: dict) -> bool:
+    """A single character recovered by gap fill: シ, 最, で. On the hour clip
+    it produced 13 of these among 73 recoveries; alone on screen they say
+    nothing, and main-pass fragments are left to merge into their neighbours."""
+    return bool(segment.get("gap_fill")) and len(_STRIP.sub("", segment.get("text", ""))) <= 1
 
 
 def is_phantom(segment: dict) -> bool:
@@ -52,6 +59,8 @@ def clean(segments: list[dict]) -> tuple[list[dict], list[dict]]:
     for s in segments:
         if is_phantom(s):
             dropped.append({**s, "dropped": "phantom phrase"})
+        elif is_gap_fragment(s):
+            dropped.append({**s, "dropped": "gap-fill fragment"})
         else:
             kept.append(s)
 

@@ -60,6 +60,9 @@ def parse_args(argv):
     t.add_argument("--context-after", type=int, default=6, help="read-only units after")
     t.add_argument("--limit", type=int, default=None,
                    help="only translate the first N cues. Cheap; use it to try a model")
+    t.add_argument("--check", action="store_true",
+                   help="after translating, find lines whose English belongs to a neighbour "
+                        "and re-translate them (about 0.25 s per line)")
     t.add_argument("--gap-ms", type=int, default=None,
                    help="silence that ends a translation unit (default 500 for Whisper "
                         "transcripts, 2000 for others)")
@@ -79,7 +82,7 @@ def settings_from(args) -> Settings:
         force=args.force, ja_only=args.ja_only, llm_model=args.llm_model,
         bilingual=args.bilingual, size=args.size, parallel=args.parallel,
         context_before=args.context_before, context_after=args.context_after,
-        limit=args.limit, gap_ms=args.gap_ms,
+        limit=args.limit, gap_ms=args.gap_ms, check=args.check,
     )
 
 
@@ -134,6 +137,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"\n  {len(result.failures)} problem(s):")
         for f in result.failures:
             print(f"    - {f}")
+    if result.shifted_left:
+        print(f"\n  {result.shifted_left} run(s) of lines still look shifted after repair; "
+              f"see the log above.")
     if result.missing:
         print(f"\n  {result.missing} line(s) have no translation. Run the same command again "
               f"to retry only those.")

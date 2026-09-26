@@ -34,6 +34,7 @@ mkdirSync(out, { recursive: true });
 export const PRESETS = {
   default: {},
   whisper: { gapMs: 500 },
+  echo: { gapMs: 500, echo: true },  // copy-then-translate replies
 };
 
 const GLOSSARY = {

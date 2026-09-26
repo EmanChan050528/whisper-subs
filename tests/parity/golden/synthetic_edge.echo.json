@@ -1,0 +1,191 @@
+{
+ "fixture": "synthetic_edge.ja.json",
+ "preset": "echo",
+ "options": {
+  "gapMs": 500,
+  "echo": true
+ },
+ "units": [
+  {
+   "ja": "あ。",
+   "start_ms": 0,
+   "end_ms": 3000,
+   "cue_index": [
+    0
+   ]
+  },
+  {
+   "ja": "」い!",
+   "start_ms": 857,
+   "end_ms": 3000,
+   "cue_index": [
+    0
+   ]
+  },
+  {
+   "ja": "!",
+   "start_ms": 2143,
+   "end_ms": 3000,
+   "cue_index": [
+    0
+   ]
+  },
+  {
+   "ja": "う",
+   "start_ms": 2571,
+   "end_ms": 3000,
+   "cue_index": [
+    0
+   ]
+  },
+  {
+   "ja": "𠮷野家に行った。",
+   "start_ms": 4000,
+   "end_ms": 6001,
+   "cue_index": [
+    2
+   ]
+  },
+  {
+   "ja": "そうだねええ？",
+   "start_ms": 5385,
+   "end_ms": 7099,
+   "cue_index": [
+    2,
+    3
+   ]
+  },
+  {
+   "ja": "本当？",
+   "start_ms": 6350,
+   "end_ms": 7099,
+   "cue_index": [
+    3
+   ]
+  },
+  {
+   "ja": "！",
+   "start_ms": 6600,
+   "end_ms": 7099,
+   "cue_index": [
+    3
+   ]
+  },
+  {
+   "ja": "「すごい」",
+   "start_ms": 6683,
+   "end_ms": 7099,
+   "cue_index": [
+    3
+   ]
+  },
+  {
+   "ja": "時間を分ける。",
+   "start_ms": 9000,
+   "end_ms": 12333,
+   "cue_index": [
+    4
+   ]
+  },
+  {
+   "ja": "三つに。",
+   "start_ms": 10555,
+   "end_ms": 12333,
+   "cue_index": [
+    4
+   ]
+  },
+  {
+   "ja": "分ける。",
+   "start_ms": 11444,
+   "end_ms": 12333,
+   "cue_index": [
+    4
+   ]
+  },
+  {
+   "ja": "単語。",
+   "start_ms": 12500,
+   "end_ms": 14000,
+   "cue_index": [
+    5
+   ]
+  },
+  {
+   "ja": "ああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ",
+   "start_ms": 20000,
+   "end_ms": 25000,
+   "cue_index": [
+    7
+   ]
+  },
+  {
+   "ja": "続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き終わり!",
+   "start_ms": 25000,
+   "end_ms": 27000,
+   "cue_index": [
+    8,
+    9
+   ]
+  },
+  {
+   "ja": "ゼロ",
+   "start_ms": 27000,
+   "end_ms": 27000,
+   "cue_index": [
+    10
+   ]
+  }
+ ],
+ "chunks": [
+  {
+   "index": 0,
+   "first_unit": 0,
+   "before": 0,
+   "target": 16,
+   "after": 0
+  }
+ ],
+ "log": [
+  "segmented 11 cues into 16 units",
+  "pass 1: analysing 16 units (181 chars)",
+  "pass 1: attempt 1 came back empty",
+  "pass 1: 2 names, 1 terms, 0 ASR corrections",
+  "chunk 1/1: rejected 16 line(s) whose copied Japanese did not match",
+  "chunk 1/1: retrying 16 missing line(s)",
+  "chunk 1/1 retry 1: rejected 16 line(s) whose copied Japanese did not match",
+  "chunk 1/1: retrying 16 missing line(s)",
+  "chunk 1/1: 15/16 lines"
+ ],
+ "failures": [
+  "chunk 1/1: 1 of 16 lines still missing after 2 retries"
+ ],
+ "translations": [
+  "line 1: lorem (2)",
+  "line 2: lorem lorem (3)",
+  "line 3: lorem lorem lorem (1)",
+  "line 4: lorem lorem lorem lorem (1)",
+  "line 5: lorem lorem lorem lorem lorem (9)",
+  "line 6: lorem lorem lorem lorem lorem lorem (7)",
+  "line 7: lorem lorem lorem lorem lorem lorem lorem (3)",
+  "line 8: lorem lorem lorem lorem lorem lorem lorem lorem (1)",
+  "line 9: lorem lorem lorem lorem lorem lorem lorem lorem lorem (5)",
+  "line 10: lorem lorem lorem lorem lorem lorem lorem lorem lorem lorem (7)",
+  "line 11: (4)",
+  "line 12: lorem (4)",
+  "",
+  "line 14: lorem lorem lorem (70)",
+  "line 15: lorem lorem lorem lorem (44)",
+  "line 16: lorem lorem lorem lorem lorem (2)"
+ ],
+ "srt_sha256": "99ceb9bd65902b72e12973b2d865e14a61c13ea4ed2355c4b99794bbc869f121",
+ "prompt_sha256": [
+  "08d89727c451793bb273fe7df6a4bbe95cfa59809a5967a7f38e7c70243d9901",
+  "08d89727c451793bb273fe7df6a4bbe95cfa59809a5967a7f38e7c70243d9901",
+  "c78a1b7584d8b55568e4fd46db93f3334a4b5a18b837eeb93b556521068b8d4b",
+  "c78a1b7584d8b55568e4fd46db93f3334a4b5a18b837eeb93b556521068b8d4b",
+  "c78a1b7584d8b55568e4fd46db93f3334a4b5a18b837eeb93b556521068b8d4b"
+ ],
+ "first_analysis_prompt": "You are preparing to translate a Japanese video transcript into English subtitles.\n\nBefore translating, read the whole transcript and build a reference sheet.\n\nVideo title: edge cases\nChannel: テスト\n\nTRANSCRIPT\nあ。\n」い!\n!\nう\n𠮷野家に行った。\nそうだねええ？\n本当？\n！\n「すごい」\n時間を分ける。\n三つに。\n分ける。\n単語。\nああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ\n続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き終わり!\nゼロ\n\nProduce JSON with exactly these keys:\n\n{\n  \"setting\": \"One or two sentences: what is happening, what kind of video, what is being played or discussed. Be specific — this is used to disambiguate homophones later.\",\n  \"speakers\": \"Who is talking. Note especially whether anyone refers to themselves in the third person by name or nickname, which is common for streamers.\",\n  \"names\": { \"japanese term\": \"how to render it in English, consistently\" },\n  \"terms\": { \"japanese term\": \"English meaning IN THIS CONTEXT, not the dictionary default\" },\n  \"asr_corrections\": { \"misrecognised form\": \"what was almost certainly said, and why\" },\n  \"register\": \"How this speaker sounds, and what English register matches. One or two sentences.\"\n}\n\nGuidance:\n- \"terms\" is for words whose ordinary dictionary sense would be wrong here. For example 配信 is \"stream\", not \"delivery\", when the speaker is a streamer.\n- \"asr_corrections\" is for speech-recognition errors you can identify from context. Japanese homophones are the usual cause. Only list ones you are confident about.\n- If a category is empty, use an empty object. Do not invent entries.\n- Output only the JSON object. No preamble, no code fence.\n\nHard limits — a reply that breaks these is useless:\n- **This is a reference sheet, NOT a translation.** Do not translate the transcript. Do not add an entry per line.\n- Keys in \"names\", \"terms\" and \"asr_corrections\" must be single words or short phrases. Never a whole sentence or a whole line of dialogue.\n- At most 12 entries in \"names\", 15 in \"terms\", 10 in \"asr_corrections\". Choose the ones that matter most and leave the rest out.\n- Keep the whole reply under 2000 characters.",
+ "first_translation_prompt": "Translate Japanese video dialogue into English subtitles.\n\nREFERENCE SHEET\n{\n  \"setting\": \"A streamer reacts to a story cutscene in a game.\",\n  \"speakers\": \"One streamer, plus in-game characters.\",\n  \"names\": {\n    \"コロンビーナ\": \"Columbina\",\n    \"マシ\": \"Mashi\"\n  },\n  \"terms\": {\n    \"配信\": \"stream\"\n  },\n  \"asr_corrections\": {},\n  \"register\": \"Casual, energetic.\"\n}\n\n\n\nLINES TO TRANSLATE\n1\tあ。\n2\t」い!\n3\t!\n4\tう\n5\t𠮷野家に行った。\n6\tそうだねええ？\n7\t本当？\n8\t！\n9\t「すごい」\n10\t時間を分ける。\n11\t三つに。\n12\t分ける。\n13\t単語。\n14\tああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああああ\n15\t続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き続き終わり!\n16\tゼロ\n\nRules:\n1. Japanese omits subjects constantly and has no verb agreement to recover them from. Decide who or what each line is about using the context above and the reference sheet. Do not default to \"I\" — it is frequently something on screen, or the person being spoken to.\n2. Japanese puts negation, tense and politeness at the END of a clause. If a line's meaning depends on a clause that finishes in a later line, translate it so the pair reads correctly together. Never assert the opposite of what was meant.\n3. Some lines are sentence fragments. Translate a fragment as a fragment that joins onto its neighbours. Do not inflate one into a standalone sentence, and never read a grammatical ending as a name.\n4. Use the reference sheet for names and terms, every time, without variation.\n5. Apply the ASR corrections from the reference sheet where the misrecognised form appears.\n6. Match the register on the reference sheet. Keep it natural spoken English, not literal glosses.\n7. Never invent content that is not in the source. If a line is genuinely unclear, translate the part you are sure of.\n8. Subtitles are read at speed and get two lines on screen. Keep each translation close to the length of its Japanese source and never longer than about 100 characters. Do not explain, expand, add background, or spell out what is merely implied — a line that needs a footnote should still be translated as the line, not the footnote.\n9. Translate ONLY the numbered lines. The context sections are for understanding; never fold their content into an answer.\n10. Output plain sentences. No leading or trailing ellipses, no surrounding quotation marks, no speaker labels.\n\nReturn JSON mapping each line number to an object holding that line's Japanese, copied exactly, and its English translation, and nothing else:\n\n{\"1\": {\"ja\": \"あ。\", \"en\": \"...\"}, \"2\": {\"ja\": \"」い!\", \"en\": \"...\"}}\n\nEvery number listed above must appear exactly once, with its own Japanese copied into \"ja\". Each \"en\" translates only the Japanese in its own \"ja\". When a sentence runs across several lines, split the English at the same places. Never move words to a neighbouring line, and never leave a line's \"en\" empty because its meaning was folded into another line. No preamble, no code fence."
+}

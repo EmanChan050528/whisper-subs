@@ -485,6 +485,62 @@ libraries 63 MB, CTranslate2 59 MB, onnxruntime 36 MB, NumPy's OpenBLAS
 20 MB, and the rest small. The packaged CLI ran the minute clip end to end on
 CUDA in 26 s, the same as from source.
 
+## 2026-09-26: Line-shift check, long cues, streaming
+
+### Line-shift check (`--check`, `eval/align.py`)
+
+The judge is shown each English line with the previous (A), own (B) and next
+(C) Japanese lines and asked which one it translates. Only runs of lines
+pointing the same wrong way count.
+
+| Test file | qwen3.5:2b judge | qwen3.5:9b judge |
+|---|---|---|
+| Clean output (242 lines) | 1 false run | **0** |
+| 3 forward shifts planted | 4 runs, broken up | **3 of 3** at the right lines |
+| 2 backward shifts planted | 3 runs, broken up | **2 of 2** |
+
+On real output (the hour's money conversation, 100 lines): jp-subs' plain
+format had **4 shifted runs** (for example 「多分テレビとか」 → "But these days,
+I talk with all kinds of people"). The same stretch translated with echo had
+**0**.
+
+Settings, each from a measurement:
+- **Temperature 0.** At 0.2, one run flagged lines 84–86 and the next did not.
+- **Runs of 2 or more, not 3.** No false alarm on 342 clean lines, and it
+  caught a real 2-line shift (57–58: 「良くないことだと思ってました」 →
+  "Why did you think that?").
+- **Repairs cover 2 lines either side.** Lines 69–70 sat between two flagged
+  runs, still shifted, and were missed otherwise.
+
+The repair re-translates the flagged lines with echo, and an independent
+re-check of the whole stretch then finds nothing. Cost: about 60 s per
+240 lines.
+
+### Long cues
+
+| | Units > 7 s before | After |
+|---|---:|---:|
+| minute clip | 2 | 2 (dense read sentences, no clause pause: left whole) |
+| `NSY6YHXbxtA` | 3 | 2 |
+| hour | 18 | 18 |
+
+The visible fix is the stretched last word: 「お疲れ様でした」 9.6 s → 4.4 s.
+Safe splits are rare. Most long lines have no pause at a clause break, and
+cutting at any pause cut words in half (奥|ゆかしい, 奥|深い) until splits were
+restricted to clause breaks.
+
+### Streaming audio
+
+| | Whole file | Streamed |
+|---|---|---|
+| Samples (mp3, mkv, mp4, 22 min clip) | — | **bit-identical** |
+| Decoding the hour, peak Python memory | 222 MB of audio | **18 MB** |
+| Transcript vs in-memory | 0.949 between two identical runs (noise) | 0.962 / 0.977 |
+| YouTube lines missed (clip) | 10% / 10% | 10% |
+
+The process peak during transcription is still about 3.2 GB. That's Whisper's
+runtime and model weights, which don't grow with the file.
+
 ## To do
 
 - [ ] Re-run the Japanese RTF on real mp4/mkv downloads when available.

@@ -288,50 +288,76 @@ parity tests pass on both jp-subs fixtures. **Met.**
 
 ## Milestone 3: quality
 
+> **In progress.** Started 2026-09-26 from a viewer report: "a long while with no
+> subtitles at all". Scores are in
+> [benchmarks.md](benchmarks.md#2026-09-26-milestone-3-missing-speech-phantoms-and-timing).
+
+### 3.0 Missing speech (added: the first thing a viewer noticed)
+Only 512 s of the 1,312 s `NSY6YHXbxtA` video had a subtitle, and 148 s of
+speech that YouTube captioned fell inside blank stretches of 10 s or more.
+- [x] **Diagnosis:** Whisper wasn't discarding windows. Turning off every
+      skip threshold (`no_speech_threshold`, `log_prob_threshold`) changed
+      nothing (22% missed either way). Decoding 30 s windows of voice acting
+      under music, it *jumps its timestamp past the speech*. VAD-on runs catch
+      some of these spots but lose others (43% missed).
+- [x] **Gap fill** (`transcribe._gap_fill`, on by default, `--no-gap-fill`
+      turns it off). After the main pass, Silero VAD (threshold 0.2) finds
+      speech with no word within 0.5 s. Stretches of 1 s or more, joined when
+      less than 2 s apart and padded by 1 s, are re-transcribed with the same
+      loaded model, and only words inside each stretch are kept. **Missed
+      lines 22% → 10%**, and speech inside 10 s blank stretches 148 s → 39 s,
+      for about 25 s of extra GPU time.
+- [x] Rejected: also retrying every word-free stretch over 8 s regardless of
+      VAD. It missed more (14%) and hallucinated more.
+- [ ] What's left is mostly short interjections (え?, [笑い]) and a few lines
+      under loud music. Worth another look after 3.5 (hotwords).
+
 ### 3.1 Evaluation harness (build this before tuning anything)
+- [x] `eval/score.py` scores the `.srt` as shown: flashes under 1 s, cues over
+      7 s, overlaps, reading speed over 20 characters/s, and against a
+      reference transcript the lines missed and the speech inside 10 s+ blank
+      stretches.
+- [x] `eval/coverage.py`: coverage of a `.ja.json` against a reference, with
+      the missed and extra lines listed.
 - [ ] **Alignment check** (from 2.5): flag translated lines that plausibly
-      belong to a neighbour. The line-shift bug is invisible in every other
-      metric.
-- [ ] `eval/` with a `score.py` that reports: cue count, mean and max
-      chars/cue, how many cues exceed 17 chars/sec (reading speed), how many
-      are shorter than 700 ms or longer than 7 s, and gaps under 80 ms.
-- [ ] Reuse jp-subs' human-reference English (`eval/reference/`) for the
-      YouTube-sourced clip, and score the same 7 failure categories.
-- [ ] Record every tuning change as before and after numbers in `eval/README.md`.
-      This is the same discipline jp-subs used.
+      belong to a neighbour. **Unsolved.** An English-length heuristic caught
+      1 of 52 deliberately shifted lines, so it was removed. The next thing to
+      try is a model-based back-check with the small `qwen3.5:2b`: "does this
+      English translate this Japanese?", in batches.
+- [ ] Reuse jp-subs' human-reference English (`eval/reference/`). It covers
+      `EmteTL5Ij8g`, which we don't have audio for, so this needs that video
+      or a new reference for `NSY6YHXbxtA`.
+- [ ] Record every tuning change as before and after numbers. For now they go
+      in `docs/benchmarks.md`.
 
 ### 3.2 Retune segmentation for Whisper
-Whisper's output isn't shaped like YouTube's, so check both assumptions:
-- [ ] **Punctuation.** `segment.py` splits on 。！？. Whisper's Japanese
-      punctuation is inconsistent, and smaller models often drop it. Measure
-      what share of units end in punctuation (`stats()` already reports this).
-- [ ] **Gap threshold.** `gapMs=2000` was set for YouTube's coarse cues. With
-      word-level timings a smaller pause (roughly 500 to 800 ms) is a reliable
-      clause boundary. Sweep the value and score each setting.
-- [ ] If punctuation is too sparse, try an `initial_prompt` written in
-      punctuated Japanese (Whisper copies the style it is primed with), and
-      fall back to gaps plus `maxChars`.
+Done in Milestones 1 and 2: see 1.3b (gap 500 ms, the punctuated prompt
+rejected) and 2.5 (`cue_end_min_chars=8`).
 
 ### 3.3 Cue timing polish (`timing.py`)
-- [ ] Minimum duration of 700 ms, maximum of about 7 s. Split long units at
-      the widest internal word gap.
-- [ ] Close gaps under about 250 ms to prevent flicker, and never overlap cues.
-- [ ] Measure reading speed on the **English** text. Stretch the end into
-      following silence where there is room.
-- [ ] Trim Whisper's trailing silence: word ends are more reliable than
-      segment ends.
+- [x] `display_times()` moves only the **end**, into following silence. The
+      rules: at least 1 s, 17 English characters per second, at most 7 s,
+      never overlapping, and gaps under 250 ms closed to two frames (83 ms).
+      On `NSY6YHXbxtA`: flashes 41 → 5, overlaps 4 → 0, over 20 cps 42 → 20.
+- [x] Word ends are already used instead of segment ends (1.3b).
+- [ ] Split units longer than 7 s at the widest internal word gap. There are
+      3 on the clip. It needs splitting the English too, so maybe pass it to
+      the translator as two lines instead.
 
-### 3.4 Hallucination guards
+### 3.4 Hallucination guards (`filters.py`)
 Whisper produces predictable junk on silence and music.
-- [ ] **More urgent now that VAD is off by default (1.2).** Test on a stream
-      archive with a long BGM-only waiting screen.
-- [ ] Drop segments with `no_speech_prob > 0.6` and a low `avg_logprob`.
-- [ ] Drop or collapse repeated lines, meaning the same text 3 or more times in
-      a row.
-- [ ] Blocklist the known phantom phrases (ご視聴ありがとうございました, チャンネル登録…)
-      when they fall inside low-energy audio.
-- [ ] Tune the VAD parameters (`min_silence_duration_ms`, `speech_pad_ms`) on
-      the noisy BGM sample.
+- [x] Phantom phrases (ご視聴ありがとうございました, チャンネル登録, 字幕…, 作詞・作曲…)
+      are dropped only when the **whole** segment is the phrase **and**
+      `no_speech_prob ≥ 0.5`, so a streamer really signing off is kept. On
+      the clip it dropped 3, all over music.
+- [x] A line of 6+ characters repeated 3+ times in a row is collapsed to its
+      first copy. On the clip it collapsed one Whisper loop.
+- [x] Dropped segments are listed with the reason in the `.ja.json`
+      (`dropped`), so the filters can be audited.
+- [ ] ~~Drop segments with `no_speech_prob > 0.6`~~: rejected. Real voice
+      lines over music score 0.7 to 0.88.
+- [ ] Test on a stream archive with a long BGM-only waiting screen. That's
+      still the biggest risk with VAD off.
 
 ### 3.5 Glossary per channel or series
 jp-subs keys glossaries by YouTube channel ID. Local files have no channel ID, so:

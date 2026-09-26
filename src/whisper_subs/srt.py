@@ -55,21 +55,27 @@ def wrap(text: str, max_chars: int = MAX_LINE_CHARS, max_lines: int = MAX_LINES)
 
 
 def units_to_srt(units: list[dict], translations: list[str], min_duration_ms: int = 700,
-                 japanese: bool = False) -> str:
+                 japanese: bool = False,
+                 times: list[tuple[int, int] | None] | None = None) -> str:
     """Translated units -> .srt.
 
     `japanese=True` puts the source line above the English (bilingual). Only
     the English is wrapped: Japanese has no spaces to wrap at, and a unit is
     already capped at 64 characters.
+
+    `times` (from timing.display_times) replaces jp-subs' rule of "spoken time,
+    stretched to `min_duration_ms`", which the parity tests still exercise.
     """
     blocks = []
-    for unit, translation in zip(units, translations, strict=True):
+    for i, (unit, translation) in enumerate(zip(units, translations, strict=True)):
         text = (translation or "").strip()
         if not text:
             continue
         start = unit["start_ms"]
         # Never let a cue vanish because the source cue had no duration.
         end = max(unit["end_ms"], start + min_duration_ms)
+        if times is not None and times[i] is not None:
+            start, end = times[i]
         body = f"{unit['ja']}\n{wrap(text)}" if japanese else wrap(text)
         blocks.append(f"{len(blocks) + 1}\n{timestamp(start)} --> {timestamp(end)}\n{body}")
     return "\n\n".join(blocks) + ("\n" if blocks else "")

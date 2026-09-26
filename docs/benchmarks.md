@@ -291,9 +291,72 @@ Echo costs about a third more translation time on long conversation, and
 nothing measurable on the clip. That's worth it: without it, the hour's
 subtitles were wrong for whole stretches.
 
+## 2026-09-26: Milestone 3, missing speech, phantoms and timing
+
+This round started from a viewer report: "a long while with no subtitles at
+all". The scores come from `eval/score.py` on the `.en.srt` as displayed, with
+YouTube's captions as the reference. Those captions aren't ground truth, but
+they're a fair check of speech we failed to show.
+
+### NSY6YHXbxtA: before and after
+
+| | M2 output | + gap fill + filters | + timing polish |
+|---|---:|---:|---:|
+| Subtitles | 220 | 247 | 247 |
+| YouTube lines with no subtitle | 43 (22%) | 21 (10%) | 21 (10%) |
+| YouTube speech inside 10 s+ blank stretches | 148 s | 42 s | **39 s** |
+| Flashes under 1 s | 40 | 41 | **5** |
+| Over 7 s | 2 | 3 | 3 |
+| Overlapping the next subtitle | 3 | 4 | **0** |
+| Faster than 20 characters/s | 40 | 42 | **20** |
+
+End to end with everything on: 4 min 24 s for the 22-minute video. That's
+transcription 120 s including gap fill, and translation 138 s for 247 units.
+
+### Why the speech was missing
+
+| Transcription setting | YouTube lines missed |
+|---|---:|
+| Default (VAD off) | 22% |
+| `no_speech_threshold=None` | 24% |
+| + `log_prob_threshold=None` | 22% |
+| + `hallucination_silence_threshold=2` | 22% |
+| VAD on (for comparison) | 43% |
+| **Gap fill**, Silero 0.2, holes ≥ 1 s | **10%** |
+| Gap fill, Silero 0.3, holes ≥ 1 s | 12% |
+| Gap fill, Silero 0.15, holes ≥ 0.5 s | 12% |
+| Gap fill, plus every word-free stretch > 8 s | 14% |
+
+The thresholds make no difference, so Whisper isn't discarding windows. It
+skips past speech while decoding: from 60.5 s it jumps straight to 86 s,
+losing five lines of voice acting under music. Re-transcribing just the
+stretches where Silero hears speech but we have no words recovers them. For
+example, 64 s クータルが象徴していたすべてを捨てた and 70 s
+私もこれからは彼女をコロンビーナと呼ぶべきだろう. The recovered real lines have
+`no_speech_prob` of 0.7 to 0.88 because of the music, so that score can't be
+used to filter.
+
+### Hallucination filters
+
+On the clip they dropped ご視聴 (134 s), ご視聴ありがとうございました (805 s) and
+ご視聴 (1,107 s), all in gap-filled audio over music, plus 2 copies of a line
+Whisper looped at 1,186 s. Nothing real was dropped.
+
+### Gap fill on the hour of conversation
+
+- 72 stretches were re-transcribed (126 s of audio), recovering 73 segments.
+  They're nearly all real short interjections: そうですね, じゃあ, なるほど,
+  うーん.
+- Nothing was dropped as a phantom, and no invented sentences appeared.
+- A couple of single-character fragments (シ, 最) got through.
+- Cost: transcription 223 s → 329 s (+47%), from the many small re-runs. On
+  the game clip it cost about 25 s.
+
 ## To do
 
 - [ ] Re-run the Japanese RTF on real mp4/mkv downloads when available.
 - [ ] Test VAD-off hallucinations on a stream archive with a long waiting
       screen or BGM-only section.
-- [ ] Put an alignment check in the eval (3.1), so shifts show up as a number.
+- [ ] An alignment check in the eval (3.1). The length heuristic failed.
+- [ ] Gap fill: batch nearby holes to cut the cost on conversation, and drop
+      single-character fragments.

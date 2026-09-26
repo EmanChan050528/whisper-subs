@@ -15,6 +15,8 @@ Writing this format means jp-subs' own CLI can translate our output unchanged:
 
 from datetime import UTC, datetime
 
+from whisper_subs.filters import clean
+
 #: Split a Whisper segment wherever consecutive words are further apart than
 #: this. Whisper sometimes pins a segment's first word tens of seconds before
 #: the rest (measured: 「え?」 at 160.9 s, then 「俺じゃないって言った」 at
@@ -65,7 +67,8 @@ def to_cues(segments: list[dict], max_word_gap: float = MAX_WORD_GAP_S) -> list[
 
 
 def to_transcript(whisper: dict, title: str) -> dict:
-    cues = to_cues(whisper["segments"])
+    kept, dropped = clean(whisper["segments"])
+    cues = to_cues(kept)
     opts = whisper["options"]
     return {
         "title": title,
@@ -74,4 +77,7 @@ def to_transcript(whisper: dict, title: str) -> dict:
         "captured_at": datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z"),
         "cue_count": len(cues),
         "cues": cues,
+        # Kept for inspection: what the hallucination filters removed, and why.
+        "dropped": [{"t_ms": round(d["start"] * 1000), "ja": d["text"], "reason": d["dropped"]}
+                    for d in dropped],
     }

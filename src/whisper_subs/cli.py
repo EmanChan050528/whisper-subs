@@ -12,12 +12,15 @@ from whisper_subs import __version__
 from whisper_subs.cues import to_transcript
 from whisper_subs.ollama import DEFAULT_MODEL as DEFAULT_LLM
 from whisper_subs.srt import cues_to_srt, units_to_srt
+from whisper_subs.timing import display_times
 from whisper_subs.transcribe import DEFAULT_MODEL, FAST_MODEL, Options
 
 # Options that change what Whisper produces. A cached .whisper.json is reused
 # only if all of these match.
 CACHE_KEYS = ("model", "language", "beam_size", "vad", "vad_threshold",
-              "condition_on_previous_text", "initial_prompt")
+              "condition_on_previous_text", "initial_prompt", "no_speech_threshold",
+              "log_prob_threshold", "hallucination_silence_threshold", "gap_fill",
+              "gap_fill_vad_threshold", "gap_fill_min_s")
 
 
 def parse_args(argv):
@@ -47,6 +50,8 @@ def parse_args(argv):
                    help="with --vad: speech probability needed to keep audio")
     w.add_argument("--prompt", default=None,
                    help="initial prompt for Whisper, e.g. names that keep being misheard")
+    w.add_argument("--no-gap-fill", action="store_true",
+                   help="skip the second pass over speech the first pass missed")
     w.add_argument("--force", action="store_true",
                    help="re-transcribe even if a cached result exists")
 
@@ -118,6 +123,7 @@ def transcribe_step(src: Path, out_dir: Path, stem: str, args) -> dict | None:
         vad=args.vad,
         vad_threshold=args.vad_threshold,
         initial_prompt=args.prompt,
+        gap_fill=not args.no_gap_fill,
     )
     whisper_path = out_dir / f"{stem}.whisper.json"
 
@@ -140,7 +146,9 @@ def transcribe_step(src: Path, out_dir: Path, stem: str, args) -> dict | None:
             unload(args.llm_model)
         print(f"{src.name}: {len(audio) / 16000:.0f}s of audio, model {opts.model}")
         started = time.perf_counter()
-        whisper = {"source": source_id(src), **transcribe(audio, opts, on_progress=progress)}
+        whisper = {"source": source_id(src),
+                   **transcribe(audio, opts, on_progress=progress,
+                                log=lambda m: print(f"\n  {m}", end="", flush=True))}
         elapsed = time.perf_counter() - started
         print(file=sys.stderr)
         print(f"  {len(whisper['segments'])} segments in {elapsed:.0f}s "
@@ -183,7 +191,8 @@ def translate_step(transcript: dict, out_dir: Path, stem: str, args) -> int:
 
     units, translations = result["units"], result["translations"]
     en_srt = out_dir / f"{stem}.en.srt"
-    en_srt.write_text(units_to_srt(units, translations), encoding="utf-8")
+    times = display_times(units, translations)
+    en_srt.write_text(units_to_srt(units, translations, times=times), encoding="utf-8")
     write_json(out_dir / f"{stem}.en.json", {
         "title": transcript.get("title"),
         "source": transcript.get("source"),
@@ -198,7 +207,8 @@ def translate_step(transcript: dict, out_dir: Path, stem: str, args) -> int:
     written = [en_srt, out_dir / f"{stem}.en.json"]
     if args.bilingual:
         both = out_dir / f"{stem}.ja-en.srt"
-        both.write_text(units_to_srt(units, translations, japanese=True), encoding="utf-8")
+        both.write_text(units_to_srt(units, translations, japanese=True, times=times),
+                        encoding="utf-8")
         written.append(both)
 
     print(f"\n  {result['translated']}/{len(units)} units translated in {seconds:.0f}s")

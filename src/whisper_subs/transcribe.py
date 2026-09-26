@@ -61,6 +61,12 @@ class Options:
     gap_fill: bool = True
     gap_fill_vad_threshold: float = 0.2
     gap_fill_min_s: float = 1.0
+    # Long files are transcribed in windows of about this many seconds, each
+    # saved to a checkpoint as it finishes, so a crash loses one window at most.
+    # Whisper already decodes in 30 s pieces and, with
+    # condition_on_previous_text off, carries nothing across them, so windows
+    # cut in pauses change little (docs/benchmarks.md).
+    window_s: float = 600.0
 
 
 def resolve_device(opts: Options) -> tuple[str, str]:
@@ -130,13 +136,53 @@ def find_holes(speech: list[tuple[float, float]], words: list[tuple[float, float
     return merged
 
 
+def speech_map(audio: np.ndarray, threshold: float) -> list[tuple[float, float]]:
+    """Silero VAD speech stretches, in seconds. Cheap next to Whisper itself."""
+    from faster_whisper.vad import VadOptions, get_speech_timestamps
+
+    return [(r["start"] / SAMPLE_RATE, r["end"] / SAMPLE_RATE)
+            for r in get_speech_timestamps(audio, VadOptions(
+                threshold=threshold, min_silence_duration_ms=500, speech_pad_ms=200))]
+
+
+def plan_windows(duration: float, speech: list[tuple[float, float]], window_s: float,
+                 search_s: float = 60.0) -> list[tuple[float, float]]:
+    """Cut [0, duration] into ~window_s pieces, each cut in a pause.
+
+    Near every multiple of window_s, take the middle of the non-speech gap
+    closest to it (within `search_s`), so no word straddles a cut. Only if
+    there is no pause at all nearby does the cut fall on the mark itself.
+    """
+    gaps = [(speech[i][1], speech[i + 1][0]) for i in range(len(speech) - 1)]
+    if speech:
+        gaps = [(0.0, speech[0][0]), *gaps, (speech[-1][1], duration)]
+    cuts = []
+    mark = window_s
+    while mark < duration - window_s / 4:  # no tiny last window
+        near = [(abs((a + b) / 2 - mark), (a + b) / 2) for a, b in gaps
+                if b > a and abs((a + b) / 2 - mark) <= search_s]
+        cut = min(near)[1] if near else mark
+        if not cuts or cut > cuts[-1] + 1:
+            cuts.append(round(cut, 3))
+        mark += window_s
+    edges = [0.0, *cuts, round(duration, 3)]
+    return [(edges[i], edges[i + 1]) for i in range(len(edges) - 1)]
+
+
 def transcribe(
     audio: np.ndarray,
     opts: Options,
     on_progress: Callable[[float, float], None] = lambda done, total: None,
     log: Callable[[str], None] = lambda msg: None,
+    resume: dict | None = None,
+    on_checkpoint: Callable[[dict], None] = lambda state: None,
 ) -> dict:
-    """Returns {"options", "duration", "segments": [...]} with times in seconds."""
+    """Returns {"options", "duration", "segments": [...]} with times in seconds.
+
+    Works window by window (see Options.window_s). After each window,
+    `on_checkpoint(state)` receives a JSON-serialisable state; passing that
+    state back as `resume` skips the windows it has already done.
+    """
     device, compute = resolve_device(opts)
     from faster_whisper import WhisperModel
 
@@ -152,20 +198,39 @@ def transcribe(
         "hallucination_silence_threshold": opts.hallucination_silence_threshold,
     }
     duration = len(audio) / SAMPLE_RATE
+    speech = speech_map(audio, opts.gap_fill_vad_threshold)
+    windows = plan_windows(duration, speech, opts.window_s)
+
+    state = {"windows": [list(w) for w in windows], "done": {}, "language": None}
+    if resume and resume.get("windows") == state["windows"]:
+        state["done"] = dict(resume.get("done") or {})
+        state["language"] = resume.get("language")
+        if state["done"]:
+            log(f"resuming: {len(state['done'])} of {len(windows)} window(s) already done")
+
     model = WhisperModel(opts.model, device=device, compute_type=compute)
     try:
-        segments, info = model.transcribe(
-            audio, vad_filter=opts.vad, vad_parameters={"threshold": opts.vad_threshold},
-            **common,
-        )
-        out = []
-        # The generator does the actual decoding; consuming it is the slow part.
-        for s in segments:
-            out.append(_segment_dict(s))
-            on_progress(min(s.end, duration), duration)
+        for i, (a, b) in enumerate(windows):
+            if str(i) in state["done"]:
+                on_progress(b, duration)
+                continue
+            piece = audio[int(a * SAMPLE_RATE):int(b * SAMPLE_RATE)]
+            segments, info = model.transcribe(
+                piece, vad_filter=opts.vad, vad_parameters={"threshold": opts.vad_threshold},
+                **common,
+            )
+            found = []
+            # The generator does the actual decoding; consuming it is the slow part.
+            for s in segments:
+                found.append(_segment_dict(s, offset=a))
+                on_progress(min(a + s.end, duration), duration)
+            state["done"][str(i)] = found
+            state["language"] = state["language"] or info.language
+            on_checkpoint(state)
 
+        out = [s for i in range(len(windows)) for s in state["done"][str(i)]]
         if opts.gap_fill:
-            out = _gap_fill(model, audio, out, opts, common, log)
+            out = _gap_fill(model, audio, out, speech, opts, common, log)
     finally:
         # Free VRAM before anything else (Ollama, later) wants it.
         del model
@@ -173,13 +238,14 @@ def transcribe(
 
     return {
         "options": {**asdict(opts), "device": device, "compute_type": compute},
-        "language": info.language,
+        "language": state["language"],
         "duration": round(duration, 3),
+        "windows": state["windows"],
         "segments": out,
     }
 
 
-def _gap_fill(model, audio, segments, opts, common, log) -> list[dict]:
+def _gap_fill(model, audio, segments, speech, opts, common, log) -> list[dict]:
     """Second pass over speech the first pass skipped.
 
     Decoding a 30 s window of voice acting under music, Whisper sometimes jumps
@@ -188,12 +254,6 @@ def _gap_fill(model, audio, segments, opts, common, log) -> list[dict]:
     nothing. Re-transcribing just those stretches, found with Silero VAD,
     recovers most of them (22% -> 10% missed) for ~30 s on a 22 min video.
     """
-    from faster_whisper.vad import VadOptions, get_speech_timestamps
-
-    speech = [(r["start"] / SAMPLE_RATE, r["end"] / SAMPLE_RATE)
-              for r in get_speech_timestamps(audio, VadOptions(
-                  threshold=opts.gap_fill_vad_threshold, min_silence_duration_ms=500,
-                  speech_pad_ms=200))]
     words = sorted((w["start"], w["end"]) for s in segments for w in s["words"])
     holes = find_holes(speech, words, opts.gap_fill_min_s)
     if not holes:

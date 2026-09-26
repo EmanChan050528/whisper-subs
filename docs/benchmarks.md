@@ -381,6 +381,20 @@ translated on the 14 lines that contain it:
 | No glossary, run 2 | Colonnibina ×14 |
 | `--glossary` with the entry hand-corrected to "Columbina" | **Columbina ×14** |
 
+### Long files (3.6)
+
+Tested on the hour clip, windowed at ~600 s:
+
+| Test | Result |
+|---|---|
+| Windowed vs unwindowed transcript | 1,269 vs 1,313 segments, 11,398 vs 11,455 characters, **97.9% text similarity**; clean text at all 5 cuts |
+| Transcription killed after 2 of 6 windows, rerun | "resuming: 2 of 6 window(s) already done", finished in 187 s |
+| Translation killed after 200 of 1,047 lines, rerun | "resuming: pass 1 and 200/1047 lines already done", **1,047 / 1,047** in 383 s |
+
+During the resumed translation Ollama's runner failed once (HTTP 500,
+"connection was forcibly closed"). The chunk's automatic retry recovered all
+20 lines.
+
 ## To do
 
 - [ ] Re-run the Japanese RTF on real mp4/mkv downloads when available.

@@ -382,11 +382,30 @@ user names one.
       the Milestone 4 GUI.
 
 ### 3.6 Long files
-- [ ] Transcribe in about 10-minute windows, cut at word gaps since VAD is
-      off. Checkpoint each one to `.whisper.json`, so a crash at 3 hours
-      doesn't lose everything.
-- [ ] Add `--resume`, which skips windows and translation chunks already done.
-- [ ] Show progress with `tqdm` (percent of audio, then chunks).
+- [x] **Windowed transcription.** About 10-minute windows, each cut at the
+      middle of the pause nearest its mark (from the Silero map that gap fill
+      already uses), with no tiny last window. On the hour clip the cuts fell
+      at 598, 1201, 1801, 2400 and 2991 s. The windowed transcript is
+      **97.9% identical** to the unwindowed one, with no words split at the cuts.
+- [x] **Checkpoints, resumed automatically** (no `--resume` flag needed).
+      `<name>.whisper.partial.json` is saved after each window, and
+      `<name>.en.partial.json` after pass 1 and after every chunk. A rerun
+      continues from them if the source file, options and units match;
+      otherwise they're ignored. `--force` discards them. Writes go to a temp
+      file and are renamed into place, so a crash can't leave a torn file.
+- [x] **Tested by killing the process.** Transcription killed after 2 of 6
+      windows resumed with the other 4. Translation killed after 200 of 1,047
+      lines resumed without redoing pass 1 or those lines, and finished
+      1,047 of 1,047.
+- [x] **If Ollama dies mid-run**, every later chunk fails fast and the run
+      ends with lines missing. The checkpoint is kept, and the same command
+      retries only the missing lines. Tested.
+- [x] A resumed run doesn't merge the glossary a second time.
+- [ ] Progress is still the CLI's own line, not `tqdm`. That's enough for
+      now, and the GUI will need its own anyway.
+- [ ] Memory: the whole file is decoded into RAM (about 230 MB per hour).
+      That's fine up to several hours, but for a 10-hour archive, decode per
+      window instead.
 
 ### 3.7 Overlapping speech (keep this scope small)
 - [ ] Record it as a known limitation first and measure it on the two-speaker
@@ -397,7 +416,8 @@ user names one.
 
 **Done when** the scores in `eval/README.md` show before and after
 improvement, and a file over an hour long runs end to end with `--resume`
-working.
+working. **Met** (the scores are in `docs/benchmarks.md`). Still open: the
+alignment check (3.1) and overlapping speech (3.7).
 
 ---
 

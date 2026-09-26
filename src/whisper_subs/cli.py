@@ -20,7 +20,7 @@ from whisper_subs.transcribe import DEFAULT_MODEL, FAST_MODEL, Options
 CACHE_KEYS = ("model", "language", "beam_size", "vad", "vad_threshold",
               "condition_on_previous_text", "initial_prompt", "no_speech_threshold",
               "log_prob_threshold", "hallucination_silence_threshold", "gap_fill",
-              "gap_fill_vad_threshold", "gap_fill_min_s", "hotwords")
+              "gap_fill_vad_threshold", "gap_fill_min_s", "hotwords", "window_s")
 
 
 def parse_args(argv):
@@ -58,7 +58,7 @@ def parse_args(argv):
     w.add_argument("--no-gap-fill", action="store_true",
                    help="skip the second pass over speech the first pass missed")
     w.add_argument("--force", action="store_true",
-                   help="re-transcribe even if a cached result exists")
+                   help="start over: ignore cached results and interrupted-run checkpoints")
 
     t = p.add_argument_group("translation")
     t.add_argument("--ja-only", action="store_true", help="stop after the Japanese subtitles")
@@ -100,14 +100,17 @@ def source_id(src: Path) -> dict:
     return {"name": src.name, "size": st.st_size, "mtime": int(st.st_mtime)}
 
 
-def load_cached(path: Path, opts: Options, src: Path) -> dict | None:
-    if not path.is_file():
-        return None
+def read_json(path: Path) -> dict | None:
     try:
-        cached = json.loads(path.read_text(encoding="utf-8"))
+        return json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
-        return None
-    if cached.get("source") != source_id(src):
+        return None  # missing, or half-written by a crash: start that step over
+
+
+def load_cached(path: Path, opts: Options, src: Path) -> dict | None:
+    """A saved transcription (or checkpoint) made from this file with these options."""
+    cached = read_json(path)
+    if not cached or cached.get("source") != source_id(src):
         return None
     want = asdict(opts)
     if all(cached.get("options", {}).get(k) == want[k] for k in CACHE_KEYS):
@@ -115,8 +118,12 @@ def load_cached(path: Path, opts: Options, src: Path) -> dict | None:
     return None
 
 
-def write_json(path: Path, data) -> None:
-    path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+def write_json(path: Path, data, indent: int | None = 2) -> None:
+    # Write-then-rename, so a crash mid-write never leaves a torn file behind
+    # for the next run to trust.
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=indent), encoding="utf-8")
+    tmp.replace(path)
 
 
 def transcribe_step(src: Path, out_dir: Path, stem: str, args) -> dict | None:
@@ -131,6 +138,9 @@ def transcribe_step(src: Path, out_dir: Path, stem: str, args) -> dict | None:
         gap_fill=not args.no_gap_fill,
     )
     whisper_path = out_dir / f"{stem}.whisper.json"
+    partial_path = out_dir / f"{stem}.whisper.partial.json"
+    if args.force:
+        partial_path.unlink(missing_ok=True)
 
     whisper = None if args.force else load_cached(whisper_path, opts, src)
     if whisper:
@@ -150,16 +160,25 @@ def transcribe_step(src: Path, out_dir: Path, stem: str, args) -> dict | None:
             from whisper_subs.ollama import unload
             unload(args.llm_model)
         print(f"{src.name}: {len(audio) / 16000:.0f}s of audio, model {opts.model}")
+        partial = load_cached(partial_path, opts, src)
+
+        def checkpoint(state):
+            write_json(partial_path, {"source": source_id(src), "options": asdict(opts),
+                                      "state": state}, indent=None)
+
         started = time.perf_counter()
         whisper = {"source": source_id(src),
                    **transcribe(audio, opts, on_progress=progress,
-                                log=lambda m: print(f"\n  {m}", end="", flush=True))}
+                                log=lambda m: print(f"\n  {m}", end="", flush=True),
+                                resume=partial["state"] if partial else None,
+                                on_checkpoint=checkpoint)}
         elapsed = time.perf_counter() - started
         print(file=sys.stderr)
         print(f"  {len(whisper['segments'])} segments in {elapsed:.0f}s "
               f"({whisper['duration'] / elapsed:.1f}x real time, "
               f"{whisper['options']['device']}/{whisper['options']['compute_type']})")
-        whisper_path.write_text(json.dumps(whisper, ensure_ascii=False, indent=1), encoding="utf-8")
+        write_json(whisper_path, whisper, indent=1)
+        partial_path.unlink(missing_ok=True)
 
     transcript = to_transcript(whisper, title=stem)
     write_json(out_dir / f"{stem}.ja.json", transcript)
@@ -168,10 +187,20 @@ def transcribe_step(src: Path, out_dir: Path, stem: str, args) -> dict | None:
     return transcript
 
 
+def translation_key(units: list[dict], args, options: dict) -> str:
+    """Identifies what a translation checkpoint was made from."""
+    import hashlib
+
+    basis = {"units": [(u["ja"], u["start_ms"]) for u in units], "model": args.llm_model,
+             "options": {k: options[k] for k in ("size", "echo", "context_before",
+                                                 "context_after")}}
+    return hashlib.sha256(json.dumps(basis, ensure_ascii=False).encode()).hexdigest()
+
+
 def translate_step(transcript: dict, out_dir: Path, stem: str, args) -> int:
     from whisper_subs.ollama import ollama_backend
-    from whisper_subs.pipeline import run
-    from whisper_subs.segment import WHISPER
+    from whisper_subs.pipeline import analyse, translate_units
+    from whisper_subs.segment import WHISPER, segment
 
     is_whisper = str(transcript.get("source", "")).startswith("whisper")
     gap_ms = args.gap_ms if args.gap_ms is not None else (
@@ -189,13 +218,57 @@ def translate_step(transcript: dict, out_dir: Path, stem: str, args) -> int:
         print(f"(limited to the first {args.limit} cues)")
 
     print(f"\ntranslating with {args.llm_model} (gap {gap_ms} ms)")
-    started = time.perf_counter()
-    result = run(transcript, ollama_backend(model=args.llm_model), options,
-                 log=lambda m: print(f"  {m}", flush=True),
-                 seed=glossary.seed(args.stored_glossary) if args.stored_glossary else None)
-    seconds = time.perf_counter() - started
 
-    units, translations = result["units"], result["translations"]
+    def log(m):
+        print(f"  {m}", flush=True)
+
+    cues = transcript.get("cues") or []
+    if not cues:
+        print("error: the transcript has no cues", file=sys.stderr)
+        return 1
+    units = segment(cues, {"gap_ms": gap_ms, "cue_end_min_chars": options["cue_end_min_chars"]})
+    log(f"segmented {len(cues)} cues into {len(units)} units")
+
+    # A long file's translation takes many minutes. Save the glossary after
+    # pass 1 and the translations after every chunk, so an interruption costs
+    # one chunk, not the run.
+    partial_path = out_dir / f"{stem}.en.partial.json"
+    key = translation_key(units, args, options)
+    partial = None if args.force else read_json(partial_path)
+    if partial and partial.get("key") != key:
+        partial = None
+
+    def checkpoint(found_glossary, translations):
+        write_json(partial_path, {"key": key, "glossary": found_glossary,
+                                  "translations": translations}, indent=None)
+
+    backend = ollama_backend(model=args.llm_model)
+    started = time.perf_counter()
+    if partial:
+        found_glossary = partial["glossary"]
+        done = sum(1 for t in partial["translations"] if t)
+        log(f"resuming: pass 1 and {done}/{len(units)} lines already done")
+    else:
+        found_glossary = analyse(
+            units, backend, transcript, log,
+            seed=glossary.seed(args.stored_glossary) if args.stored_glossary else None)
+        checkpoint(found_glossary, [""] * len(units))
+    result = translate_units(
+        units, found_glossary, backend, options, log,
+        on_progress=lambda translations, done, total: checkpoint(found_glossary, translations),
+        initial=partial["translations"] if partial else None)
+    seconds = time.perf_counter() - started
+    translations = result["translations"]
+    missing = sum(1 for t in translations if not t)
+    if missing:
+        # Keep the checkpoint: typically Ollama stopped answering partway, and
+        # a rerun should retry only these lines, not the whole file.
+        checkpoint(found_glossary, translations)
+    else:
+        partial_path.unlink(missing_ok=True)
+
+    result = {**result, "glossary": found_glossary,
+              "translated": sum(1 for t in translations if t)}
     en_srt = out_dir / f"{stem}.en.srt"
     times = display_times(units, translations)
     en_srt.write_text(units_to_srt(units, translations, times=times), encoding="utf-8")
@@ -218,7 +291,8 @@ def translate_step(transcript: dict, out_dir: Path, stem: str, args) -> int:
         written.append(both)
 
     print(f"\n  {result['translated']}/{len(units)} units translated in {seconds:.0f}s")
-    if args.glossary and result["glossary"]:
+    # Merged once per file: by the run that did pass 1, not again on a resume.
+    if args.glossary and result["glossary"] and not partial:
         where, added = glossary.remember(args.glossary, result["glossary"], source=stem)
         print(f"  glossary '{args.glossary}': {added} new entr{'y' if added == 1 else 'ies'}, "
               f"{where}")
@@ -226,6 +300,9 @@ def translate_step(transcript: dict, out_dir: Path, stem: str, args) -> int:
         print(f"\n  {len(result['failures'])} problem(s):")
         for f in result["failures"]:
             print(f"    - {f}")
+    if missing:
+        print(f"\n  {missing} line(s) have no translation. Run the same command again to "
+              f"retry only those.")
     for path in written:
         print(f"  {path}")
     return 0 if result["translated"] else 1

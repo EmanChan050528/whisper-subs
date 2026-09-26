@@ -117,12 +117,17 @@ def analyse(units: list[dict], backend: Backend, meta: dict | None = None,
 def translate_units(
     units: list[dict], glossary: dict, backend: Backend, options: dict | None = None,
     log: Log = _nolog, on_progress: Callable[[list[str], int, int], None] | None = None,
+    initial: list[str] | None = None,
 ) -> dict:
-    """Pass 2: translate every chunk. `translations` is parallel to `units`."""
+    """Pass 2: translate every chunk. `translations` is parallel to `units`.
+
+    `initial` resumes an interrupted run: lines already translated are kept,
+    and a chunk with nothing left to translate is skipped.
+    """
     options = options or {}
     chunks = chunk(units, {k: options[k] for k in ("size", "context_before", "context_after")
                            if k in options})
-    translations = [""] * len(units)
+    translations = list(initial) if initial else [""] * len(units)
     failures: list[str] = []
     echo = bool(options.get("echo"))
 
@@ -167,6 +172,8 @@ def translate_units(
 
         label = f"chunk {c['index'] + 1}/{len(chunks)}"
         total = len(c["target"])
+        if initial and not outstanding(c):
+            continue  # done before the interruption
 
         try:
             request(c, outstanding(c), label)

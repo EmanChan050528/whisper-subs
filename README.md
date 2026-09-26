@@ -31,7 +31,7 @@ build plan.
 | 0. Setup and GPU check | ✅ |
 | 1. CLI MVP: audio in, Japanese `.srt` out | ✅ |
 | 2. Translation: port the jp-subs pipeline, English `.srt` | ✅ |
-| 3. Quality: eval, timing, glossary, long files | ☐ |
+| 3. Quality: eval, timing, glossary, long files | ◐ core done; alignment check and overlapping speech open |
 | 4. GUI and packaging | ☐ |
 
 ## Usage
@@ -51,6 +51,12 @@ gives them to the next file of the same series, so a character is translated
 the same way every episode. The glossary is a JSON file in
 `%APPDATA%/whisper-subs/glossaries/`. If a name comes out wrong, fix it there
 and the correction sticks, because existing entries always win.
+
+Long files are safe to interrupt. Progress is saved after every ~10-minute
+window of transcription and every chunk of translation, and running the same
+command again picks up where it stopped. If Ollama stops answering partway,
+the same command retries just the lines that are missing. Use `--force` to
+start over.
 
 A 22-minute video takes about 4 minutes on an RTX 5070: 2 to transcribe, 2 to
 translate. Whisper and the LLM take turns on the GPU. See

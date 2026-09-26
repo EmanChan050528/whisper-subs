@@ -176,12 +176,14 @@ def transcribe(
     log: Callable[[str], None] = lambda msg: None,
     resume: dict | None = None,
     on_checkpoint: Callable[[dict], None] = lambda state: None,
+    check_stop: Callable[[], None] = lambda: None,
 ) -> dict:
     """Returns {"options", "duration", "segments": [...]} with times in seconds.
 
     Works window by window (see Options.window_s). After each window,
     `on_checkpoint(state)` receives a JSON-serialisable state; passing that
     state back as `resume` skips the windows it has already done.
+    `check_stop()` is called between segments; it stops the run by raising.
     """
     device, compute = resolve_device(opts)
     from faster_whisper import WhisperModel
@@ -222,6 +224,7 @@ def transcribe(
             found = []
             # The generator does the actual decoding; consuming it is the slow part.
             for s in segments:
+                check_stop()
                 found.append(_segment_dict(s, offset=a))
                 on_progress(min(a + s.end, duration), duration)
             state["done"][str(i)] = found
@@ -230,7 +233,7 @@ def transcribe(
 
         out = [s for i in range(len(windows)) for s in state["done"][str(i)]]
         if opts.gap_fill:
-            out = _gap_fill(model, audio, out, speech, opts, common, log)
+            out = _gap_fill(model, audio, out, speech, opts, common, log, check_stop)
     finally:
         # Free VRAM before anything else (Ollama, later) wants it.
         del model
@@ -245,7 +248,8 @@ def transcribe(
     }
 
 
-def _gap_fill(model, audio, segments, speech, opts, common, log) -> list[dict]:
+def _gap_fill(model, audio, segments, speech, opts, common, log,
+              check_stop=lambda: None) -> list[dict]:
     """Second pass over speech the first pass skipped.
 
     Decoding a 30 s window of voice acting under music, Whisper sometimes jumps
@@ -264,6 +268,7 @@ def _gap_fill(model, audio, segments, speech, opts, common, log) -> list[dict]:
     duration = len(audio) / SAMPLE_RATE
     added = []
     for a, b in holes:
+        check_stop()
         # A second of padding gives Whisper context; words in the padding are
         # already transcribed, so only words inside the hole are kept.
         a0, b0 = max(0.0, a - 1.0), min(duration, b + 1.0)

@@ -20,7 +20,7 @@ def test_enable_cuda_dlls_is_safe_to_call_twice():
 def test_cache_is_tied_to_the_source_file(tmp_path):
     import json
 
-    from whisper_subs.cli import load_cached, source_id
+    from whisper_subs.job import load_cached, source_id
     from whisper_subs.transcribe import Options
 
     mp4, mkv = tmp_path / "clip.mp4", tmp_path / "clip.mkv"

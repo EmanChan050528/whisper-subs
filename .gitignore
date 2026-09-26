@@ -38,3 +38,6 @@ models/
 Thumbs.db
 .idea/
 .vscode/
+
+# ...but keep the build recipe
+!packaging/*.spec

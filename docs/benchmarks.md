@@ -459,6 +459,32 @@ over 20 cps (20), and 1,047 / 1,047 on the hour.
 first "after" run take 13 min 53 s (Whisper at 2.2× real time). Stop test
 servers with their runners, and check `nvidia-smi` before timing anything.
 
+## 2026-09-26: Milestone 4, packaging
+
+### Which CUDA libraries Whisper actually uses
+
+After a real transcription (large-v3, fp16, with gap fill), these are the DLLs
+mapped into the process from `site-packages`:
+
+| Library | Size | Loaded? |
+|---|---:|---|
+| `nvidia/cublas`: cublas64_12, cublasLt64_12 | 771 MB | **yes** |
+| `ctranslate2`: ctranslate2.dll, its own small cudnn64_9.dll shim | 60 MB | yes |
+| `nvidia/cudnn` (all of it) | 1.1 GB | **no** |
+| `nvidia/cuda_nvrtc` | 179 MB | **no** |
+
+With the cuDNN and NVRTC folders hidden, transcription still runs in fp16 and
+in int8_float16 with identical output. So the `cuda` extra is now cuBLAS
+alone. Milestone 0 installed cuDNN on common advice, but the error at the time
+was only the missing cuBLAS.
+
+### Build size
+
+`dist/whisper-subs/` is **1.1 GB**: cuBLAS 736 MB, Qt 71 MB, FFmpeg
+libraries 63 MB, CTranslate2 59 MB, onnxruntime 36 MB, NumPy's OpenBLAS
+20 MB, and the rest small. The packaged CLI ran the minute clip end to end on
+CUDA in 26 s, the same as from source.
+
 ## To do
 
 - [ ] Re-run the Japanese RTF on real mp4/mkv downloads when available.

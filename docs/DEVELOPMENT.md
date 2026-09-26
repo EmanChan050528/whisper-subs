@@ -433,27 +433,66 @@ alignment check (3.1) and overlapping speech (3.7).
 
 ## Milestone 4: GUI and packaging
 
-### 4.1 GUI
-- [ ] Use **PySide6** (it handles drag-and-drop natively and looks right on
-      Windows), or `tkinterdnd2` if the bundle size matters.
-- [ ] One window: a drop zone, model pickers (Whisper and Ollama, the latter
-      filled from `/api/tags`), a glossary name, a bilingual checkbox, a
-      progress bar and log, a Stop button, and "Open output folder".
-- [ ] Run the pipeline on a `QThread` and use the existing `on_progress` and
-      `should_stop` hooks. The core needs no changes.
-- [ ] A queue for several files dropped at once.
+> **Built 2026-09-26.** The window, a standalone build, and a README with a
+> demo GIF recorded from a real run.
 
-### 4.2 Packaging
-- [ ] PyInstaller one-folder build. Download Whisper models on first run (to
-      the HF cache), and don't bundle them.
-- [ ] A preflight screen that checks whether Ollama is reachable, whether the
-      model is pulled, and whether CUDA is available, with the fix for each.
+### 4.0 One pipeline, two front ends (`job.py`)
+- [x] The CLI's pipeline moved into `job.run_job(src, settings, log,
+      progress, should_stop)`. It reports through callbacks instead of
+      `print`, and raises `JobError` for things the user can fix and `Stopped`
+      when asked to stop. `cli.py` is now just argument parsing plus a printer.
+      All existing tests passed unchanged.
+- [x] Stop is checked between Whisper segments, gap-fill clips and
+      translation chunks. With the 3.6 checkpoints, **Stop is a pause**.
+
+### 4.1 GUI (`gui.py`, `whisper-subs-gui`)
+- [x] **PySide6-Essentials** (the Qt Widgets subset). One window: a drop zone
+      (files or whole folders, or click to choose), a queue with a status per
+      file, Whisper and Ollama model pickers (the latter from `/api/tags`), a
+      series glossary picker with **Edit…** (opens the folder), bilingual and
+      Japanese-only switches, Start / Stop / Clear finished / Open output
+      folder, a progress bar and a log.
+- [x] A health line (the 4.2 "preflight"): CUDA ready or not, Ollama running
+      or not, and models installed, each with the fix.
+- [x] Runs on a `QThread`, and files can be added while it runs. One file's
+      error is shown in the list and the queue carries on.
+- [x] Preferences are kept in `%APPDATA%\whisper-subs\gui.ini`, **not the
+      registry**. The first version used the registry, and its tests
+      overwrote the real settings.
+- [x] Tests (`tests/test_gui.py`, offscreen, with a fake job): the queue runs,
+      errors stay per file, Stop pauses and Start carries on, Japanese-only
+      disables the translation settings, and folders expand to their media.
+- [x] **Real run through the window**: the minute clip in 27 s. On the
+      22-minute clip, Stop during translation left it "Paused"; Start reused
+      the transcription and resumed at line 120 of 244, then finished.
+
+### 4.2 Packaging (`packaging/whisper-subs.spec`)
+- [x] PyInstaller, one folder, **two programs sharing one set of libraries**:
+      `Whisper Subtitler.exe` (windowed) and `whisper-subs.exe` (console).
+      Whisper models aren't bundled; they download on first use.
+- [x] **cuDNN is not needed.** Listing the DLLs a real transcription maps
+      showed only `cublas64_12` and `cublasLt64_12` from the NVIDIA wheels.
+      Transcription runs in fp16 and int8 with cuDNN and NVRTC hidden. The
+      `cuda` extra is now cuBLAS alone: 1.3 GB less to install and bundle.
+- [x] Bundle **1.1 GB**, of which cuBLAS is 736 MB. The rest: Qt 71 MB,
+      FFmpeg libraries 63 MB, CTranslate2 59 MB, onnxruntime 36 MB.
+- [x] The build tested end to end: the packaged CLI ran the minute clip on
+      CUDA in 26 s, and the packaged window starts and stays up.
+- [ ] Publish a zip as a GitHub release. It's under the 2 GB asset limit.
+- [ ] An app icon, and version info on the .exe files.
 
 ### 4.3 README and portfolio
-- [ ] Demo GIF: drop a file, show progress, then the video playing with subs.
-- [ ] Before and after table from the eval, with Whisper and the pipeline set
-      against a naive per-line translation.
-- [ ] Cross-link with jp-subs as a "local-AI subtitle toolkit".
+- [x] Rewritten as the project's front page: what it does, how it works,
+      the measured decisions, speed, install, use, limitations and building.
+- [x] Demo GIF (`docs/demo.gif`, 0.4 MB) and screenshot, recorded by
+      `scripts/make_demo.py` from a real run of the window on the minute clip,
+      which is the user's own sample, so there's no third-party footage.
+      The finished frame shows real output lines.
+- [x] Cross-linked with jp-subs as a local-AI subtitle toolkit.
+- [ ] ~~The video playing with subs~~: the samples are audio. Adding it needs
+      footage that can be published.
+- [ ] Before and after table against a naive per-line translation. The
+      nearest thing now is the line-shift table in benchmarks.md.
 
 ---
 

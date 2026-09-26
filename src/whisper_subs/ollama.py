@@ -139,6 +139,17 @@ def unload(model: str, host: str = DEFAULT_HOST) -> None:
         pass
 
 
+def list_models(host: str = DEFAULT_HOST, timeout: float = 3) -> list[str] | None:
+    """Installed model names, or None if Ollama is not reachable."""
+    try:
+        with urllib.request.urlopen(_host_url(host).rstrip("/") + "/api/tags",
+                                    timeout=timeout) as r:
+            models = json.loads(r.read().decode("utf-8")).get("models", [])
+    except (urllib.error.URLError, TimeoutError, ValueError):
+        return None
+    return sorted(m["name"] for m in models if m.get("name"))
+
+
 def unload_all(host: str = DEFAULT_HOST) -> None:
     """Unload every model Ollama has resident. Silent if Ollama is not running."""
     try:

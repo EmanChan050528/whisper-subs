@@ -1,96 +1,140 @@
-# whisper-subs
+# Whisper Subtitler
 
-Subtitles for any Japanese video or audio file, generated entirely on your own
-machine. It needs no cloud services and no API key, and nothing is charged per
-file.
+English subtitles for any Japanese video or audio file, made entirely on your
+own machine. It needs no cloud services and no API key, and nothing is charged
+per file.
 
-```
-whisper-subs input.mp4
-```
+![Dropping a file in, transcribing, translating](docs/demo.gif)
 
-1. **Transcribe.** faster-whisper produces Japanese text with timings for each
-   word.
-2. **Translate.** A two-pass local LLM pipeline on Ollama, from
-   [jp-subs](https://github.com/EmanChan050528/jp-subs). Pass 1 reads the whole
-   transcript and builds a glossary of names, terms and speech-recognition
-   fixes. Pass 2 translates in chunks, with context on both sides of each chunk.
-3. **Write.** It outputs an English `.srt`, and optionally a bilingual JP/EN
-   `.srt`.
+Drop a file in and get `.srt` subtitles beside it: English, Japanese, and
+optionally both together. It works on the videos that have no caption track,
+such as local recordings, Niconico and Bilibili downloads, and stream
+archives. Its sister project [jp-subs](https://github.com/EmanChan050528/jp-subs)
+does the same for YouTube videos that do have captions. Together they make one
+local-AI subtitle toolkit.
 
-It works on the videos that jp-subs can't handle, the ones with no caption
-track: local files, Niconico and Bilibili downloads, and stream archives.
-Together the two projects form one local-AI subtitle toolkit.
+## How it works
 
-## Status
+1. **Transcribe.** [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
+   (large-v3) writes the Japanese with a timestamp on every word. A second
+   pass re-transcribes stretches where speech was detected but no words came
+   back. Whisper tends to skip voice acting under music, and this pass halves
+   the lines it misses.
+2. **Translate.** A local LLM on [Ollama](https://ollama.com) (qwen3.5:9b by
+   default) translates in two passes, ported from jp-subs. Pass 1 reads the
+   whole transcript and builds a glossary of names, terms and likely
+   mishearings. Pass 2 translates in chunks, with context on both sides of each.
+3. **Time.** Each subtitle starts when its words start. It stays up long
+   enough to read, never overlaps the next one, and doesn't flicker.
 
-In development. See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the step-by-step
-build plan.
+Details that took measuring to get right:
 
-| Milestone | |
-|---|---|
-| 0. Setup and GPU check | ✅ |
-| 1. CLI MVP: audio in, Japanese `.srt` out | ✅ |
-| 2. Translation: port the jp-subs pipeline, English `.srt` | ✅ |
-| 3. Quality: eval, timing, glossary, long files | ◐ core done; alignment check and overlapping speech open |
-| 4. GUI and packaging | ☐ |
+- **Lines stay on their own subtitle.** On fragmented conversation, the model
+  used to rebuild whole sentences and spread the English across neighbouring
+  lines. Now it copies each Japanese line before translating it, and any copy
+  that doesn't match its line is caught and retried.
+- **Invented text is filtered out.** Over music, Whisper writes things like
+  「ご視聴ありがとうございました」 ("thanks for watching") that nobody said. These
+  are dropped only when the audio also looks like non-speech, so a real
+  sign-off is kept.
+- **Series glossaries.** With a glossary, a character is translated the same
+  way every episode. Fix a name once in the glossary file and it stays fixed.
+- **Interruptions are safe.** Progress is saved every ~10 minutes of audio and
+  after every translation chunk. Stopping is really pausing.
 
-## Usage
+The measurements behind each decision, including the ideas that were tried and
+dropped, are in [docs/benchmarks.md](docs/benchmarks.md).
 
-```bash
-whisper-subs video.mp4               # video.en.srt, plus video.ja.srt and video.ja.json
-whisper-subs video.mp4 --bilingual   # also video.ja-en.srt (Japanese above English)
-whisper-subs video.mp4 --ja-only     # Japanese only; no Ollama needed
-whisper-subs video.ja.json           # translate again without re-transcribing
-whisper-subs video.mp4 --fast        # large-v3-turbo: ~4x faster, weaker on rare words
-whisper-subs video.mp4 --limit 60    # translate only the first 60 cues, to try a model
-whisper-subs ep02.mp4 --glossary my-show   # keep names consistent across a series
-```
+## Speed
 
-`--glossary NAME` remembers the names and terms each file's analysis finds, and
-gives them to the next file of the same series, so a character is translated
-the same way every episode. The glossary is a JSON file in
-`%APPDATA%/whisper-subs/glossaries/`. If a name comes out wrong, fix it there
-and the correction sticks, because existing entries always win.
+On an RTX 5070 (12 GB): a 22-minute video takes about **3½ minutes**, and an
+hour of conversation about **10 minutes**. Whisper and the LLM take turns on
+the GPU. Without an NVIDIA GPU everything still works, but slowly.
 
-Long files are safe to interrupt. Progress is saved after every ~10-minute
-window of transcription and every chunk of translation, and running the same
-command again picks up where it stopped. If Ollama stops answering partway,
-the same command retries just the lines that are missing. Use `--force` to
-start over.
+## Install
 
-A 22-minute video takes about 3½ minutes on an RTX 5070, and an hour of
-conversation about 10. Whisper and the LLM take turns on the GPU. See
-[docs/benchmarks.md](docs/benchmarks.md).
-
-The translation pipeline is a Python port of
-[jp-subs](https://github.com/EmanChan050528/jp-subs), tested byte for byte
-against the original. It adds one fix of its own. The model copies each
-Japanese line before translating it, which stops translations sliding onto
-neighbouring lines in fragmented conversation, and lets a mismatched copy be
-caught and retried.
-
-## Requirements
-
-- Windows, with Python 3.11 or later
-- [Ollama](https://ollama.com) with a translation model (`ollama pull qwen3.5:9b`)
-- An NVIDIA GPU is recommended. CPU works with smaller Whisper models.
-
-## Development setup
+You need [Ollama](https://ollama.com) running with a translation model:
 
 ```bash
+ollama pull qwen3.5:9b
+```
+
+**From source** (Windows, Python 3.11 or later):
+
+```bash
+git clone https://github.com/EmanChan050528/whisper-subs
+cd whisper-subs
 py -3.11 -m venv .venv
-.venv/Scripts/python -m pip install -e ".[dev,cuda]"
+.venv/Scripts/python -m pip install -e ".[gui,cuda]"
 ```
 
-The `cuda` extra installs cuBLAS and cuDNN as pip wheels, so no system CUDA
-toolkit is needed. Leave it out on a machine without an NVIDIA GPU.
+Leave out `cuda` on a machine without an NVIDIA GPU. It installs cuBLAS as a
+pip wheel, so no CUDA toolkit is needed.
 
-Check the GPU and measure speed on any audio or video file:
+**Standalone build**: `packaging/whisper-subs.spec` builds a folder with both
+programs and no Python required (about 1.1 GB, mostly cuBLAS). See
+[Building](#building).
+
+The first run downloads the Whisper model (large-v3, 2.9 GB).
+
+## Use
+
+**The window:** run `whisper-subs-gui`, or `Whisper Subtitler.exe` in a
+build. Drop in files or whole folders, press **Start**, and the subtitles
+appear next to each file. **Stop** pauses; **Start** carries on from there.
+
+![The window after a run](docs/screenshot.png)
+
+**The command line:**
 
 ```bash
-.venv/Scripts/python scripts/gpu_check.py path/to/clip.mp4 --language ja
+whisper-subs video.mp4               # video.en.srt, plus video.ja.srt
+whisper-subs video.mp4 --bilingual   # also video.ja-en.srt (Japanese above English)
+whisper-subs video.mp4 --ja-only     # Japanese only; Ollama not needed
+whisper-subs ep02.mp4 --glossary my-show   # keep names consistent across a series
+whisper-subs video.ja.json           # translate again without re-transcribing
+whisper-subs video.mp4 --fast        # large-v3-turbo: ~4x faster transcription, weaker on rare words
 ```
 
-Whisper models download on first use (large-v3 is 2.9 GB). If a download hangs
-at 0 bytes, set `HF_HUB_DISABLE_XET=1`. Results are in
-[docs/benchmarks.md](docs/benchmarks.md).
+Run the same command again after an interruption and it resumes. `--force`
+starts over. `whisper-subs --help` lists everything.
+
+**Glossaries** are JSON files in `%APPDATA%\whisper-subs\glossaries\` (the
+window's **Edit…** button opens the folder). If a name comes out wrong, correct
+it there. Existing entries always win when a new file's findings are merged in.
+
+## Limitations
+
+- **Overlapping speech** comes out as one speaker's words, or a mix of both.
+  It hasn't been measured yet.
+- **Long music-only stretches** (stream waiting screens) are where invented
+  text is most likely. The filters catch the known phrases; `--vad` skips
+  non-speech entirely, at the cost of losing quiet speech.
+- **Songs** are best effort: Whisper misses verses and invents credits.
+- **Line shifts are fixed but not measured.** Nothing yet detects a
+  translation on the wrong line automatically.
+
+## Building
+
+```bash
+.venv/Scripts/python -m pip install -e ".[gui,cuda]" pyinstaller
+.venv/Scripts/pyinstaller packaging/whisper-subs.spec --noconfirm
+```
+
+This produces `dist/whisper-subs/` with `Whisper Subtitler.exe` and
+`whisper-subs.exe`. Only cuBLAS is bundled from CUDA. A transcription never
+loads cuDNN, which saves 1.3 GB.
+
+## Development
+
+```bash
+.venv/Scripts/python -m pip install -e ".[dev,gui,cuda]"
+.venv/Scripts/python -m pytest
+```
+
+The translation pipeline is checked byte for byte against jp-subs' JavaScript
+(`tests/parity/`), using a fake model that drops lines, wraps replies in prose and fails pass 1
+on purpose.
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) is the build log, milestone by
+milestone. `scripts/gpu_check.py` measures Whisper speed on any file, and
+`eval/score.py` scores subtitles against a reference transcript.

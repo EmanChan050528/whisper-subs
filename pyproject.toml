@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "whisper-subs"
-version = "0.0.1"
+version = "0.1.0"
 description = "Subtitle any Japanese video or audio locally: faster-whisper transcription + two-pass Ollama translation to .srt"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -30,6 +30,9 @@ whisper-subs-gui = "whisper_subs.gui:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+whisper_subs = ["assets/*.png"]
 
 [tool.ruff]
 line-length = 100

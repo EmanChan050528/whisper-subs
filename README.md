@@ -138,3 +138,10 @@ on purpose.
 [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) is the build log, milestone by
 milestone. `scripts/gpu_check.py` measures Whisper speed on any file, and
 `eval/score.py` scores subtitles against a reference transcript.
+
+## Credits
+
+- Speech recognition: OpenAI's Whisper, run by [faster-whisper](https://github.com/SYSTRAN/faster-whisper).
+- Translation: any model on [Ollama](https://ollama.com); the default is Qwen 3.5 (9B).
+- Translation pipeline: ported from [jp-subs](https://github.com/EmanChan050528/jp-subs).
+- The icon's lettering is [Noto Sans JP](https://fonts.google.com/noto/specimen/Noto+Sans+JP), SIL Open Font License 1.1.

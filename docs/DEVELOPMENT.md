@@ -479,7 +479,16 @@ alignment check (3.1) and overlapping speech (3.7).
 - [x] The build tested end to end: the packaged CLI ran the minute clip on
       CUDA in 26 s, and the packaged window starts and stays up.
 - [ ] Publish a zip as a GitHub release. It's under the 2 GB asset limit.
-- [ ] An app icon, and version info on the .exe files.
+- [x] App icon: 字 over a yellow A on a diagonally split blue badge (the
+      window's accent colour), picked from four drafts previewed at 256, 64,
+      32 and 16 px on light and dark backgrounds. It was chosen because it
+      reads best at small sizes. The lettering is Noto Sans JP Bold (SIL OFL
+      1.1). `scripts/make_icon.py` redraws it and fetches the font into the
+      gitignored `build/`. The icon is used for the window, the taskbar (its
+      own AppUserModelID, so it isn't grouped under Python's) and both .exe
+      files.
+- [x] Version info on both .exe files (Explorer > Properties > Details),
+      read from `__version__`.
 
 ### 4.3 README and portfolio
 - [x] Rewritten as the project's front page: what it does, how it works,

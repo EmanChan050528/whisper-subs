@@ -10,9 +10,39 @@
 
 from pathlib import Path
 
-from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
+import re
 
-site = Path(SPECPATH).parent / ".venv" / "Lib" / "site-packages"
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
+from PyInstaller.utils.win32.versioninfo import (
+    FixedFileInfo, StringFileInfo, StringStruct, StringTable, VarFileInfo, VarStruct,
+    VSVersionInfo,
+)
+
+here = Path(SPECPATH)
+site = here.parent / ".venv" / "Lib" / "site-packages"
+icon = str(here / "icon.ico")  # scripts/make_icon.py
+version = re.search(r'__version__ = "([^"]+)"',
+                    (here.parent / "src" / "whisper_subs" / "__init__.py").read_text()).group(1)
+
+
+def version_info(description, filename):
+    """What Explorer shows under Properties > Details."""
+    nums = tuple(int(n) for n in (version.split(".") + ["0"] * 4)[:4])
+    return VSVersionInfo(
+        ffi=FixedFileInfo(filevers=nums, prodvers=nums),
+        kids=[
+            StringFileInfo([StringTable("040904B0", [
+                StringStruct("ProductName", "Whisper Subtitler"),
+                StringStruct("FileDescription", description),
+                StringStruct("FileVersion", version),
+                StringStruct("ProductVersion", version),
+                StringStruct("OriginalFilename", filename),
+                StringStruct("InternalName", filename.removesuffix(".exe")),
+                StringStruct("LegalCopyright", "github.com/EmanChan050528/whisper-subs"),
+            ])]),
+            VarFileInfo([VarStruct("Translation", [0x0409, 1200])]),
+        ],
+    )
 
 # cuBLAS only. A transcription never loads cuDNN or NVRTC (docs/benchmarks.md),
 # which saves 1.3 GB. Kept at nvidia/cublas/bin so gpu.enable_cuda_dlls finds it.
@@ -20,6 +50,8 @@ cublas = [(str(dll), "nvidia/cublas/bin") for dll in (site / "nvidia" / "cublas"
 
 binaries = cublas + collect_dynamic_libs("ctranslate2") + collect_dynamic_libs("av")
 datas = collect_data_files("faster_whisper")  # the Silero VAD model
+datas += [(str(here.parent / "src" / "whisper_subs" / "assets" / "icon.png"),
+           "whisper_subs/assets")]  # the window icon
 
 # Qt modules the window does not use; PySide6-Essentials still ships them.
 excludes = [
@@ -41,11 +73,13 @@ cli = Analysis([str(Path(SPECPATH) / "launch_cli.py")], **common)
 
 gui_exe = EXE(
     PYZ(gui.pure), gui.scripts, [],
-    exclude_binaries=True, name="Whisper Subtitler", console=False,
+    exclude_binaries=True, name="Whisper Subtitler", console=False, icon=icon,
+    version=version_info("Whisper Subtitler", "Whisper Subtitler.exe"),
 )
 cli_exe = EXE(
     PYZ(cli.pure), cli.scripts, [],
-    exclude_binaries=True, name="whisper-subs", console=True,
+    exclude_binaries=True, name="whisper-subs", console=True, icon=icon,
+    version=version_info("Whisper Subtitler (command line)", "whisper-subs.exe"),
 )
 
 COLLECT(

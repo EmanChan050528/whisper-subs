@@ -12,7 +12,7 @@ import traceback
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QSettings, Qt, QThread, Signal
-from PySide6.QtGui import QColor, QDragEnterEvent, QDropEvent, QFont
+from PySide6.QtGui import QColor, QDragEnterEvent, QDropEvent, QFont, QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -38,6 +38,7 @@ from whisper_subs import __version__, glossary, ollama
 from whisper_subs.job import JobError, Settings, Stopped, run_job
 from whisper_subs.transcribe import DEFAULT_MODEL, FAST_MODEL
 
+ICON = Path(__file__).parent / "assets" / "icon.png"
 MEDIA = ("*.mp4 *.mkv *.webm *.mov *.avi *.flv *.ts *.m4v "
          "*.mp3 *.m4a *.aac *.wav *.flac *.ogg *.opus")
 WHISPER_CHOICES = [(f"{DEFAULT_MODEL}  (accurate)", DEFAULT_MODEL),
@@ -472,9 +473,15 @@ QListWidget { font-family: Consolas, monospace; }
 
 
 def main() -> int:
+    if sys.platform == "win32":
+        # Its own taskbar identity, so Windows shows this icon rather than
+        # Python's when run from source.
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("whisper-subs.gui")
     app = QApplication(sys.argv)
     app.setApplicationName("Whisper Subtitler")
     app.setApplicationVersion(__version__)
+    app.setWindowIcon(QIcon(str(ICON)))
     window = MainWindow()
     window.show()
     return app.exec()

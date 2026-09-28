@@ -9,11 +9,19 @@ Tags are annotated, so `git show 0.1.0` explains why each one is where it is.
 
 ---
 
-## Unreleased — line-shift check and streaming audio
+## Unreleased — a new window, line-shift check and streaming audio
 
-An optional `--check` pass finds English subtitles that landed on a neighbouring line and re-translates
-them, and audio is now decoded in a stream, so an hour-long file no longer needs the whole recording in
-memory.
+The window has been rebuilt as a modern app, with file cards that show each stage's progress, switches
+instead of checkboxes, and a drop target that covers the whole window. An optional `--check` pass finds
+English subtitles that landed on a neighbouring line and re-translates them, and audio is now decoded in
+a stream, so an hour-long file no longer needs the whole recording in memory.
+
+The new window is a web page (HTML, CSS and JavaScript) shown by [pywebview](https://pywebview.flowrl.com)
+in Windows' own WebView2, replacing the Qt widgets. It follows Windows' light or dark mode, title bar
+included, and animates files in and out of the queue. The main button changes between Start, Pause and
+Resume, and each finished file lists its subtitle files, which open in Explorer when clicked. The log folds
+away to one line. Settings from the old window carry over. Dropping a folder no longer queues a
+transcript (`.ja.json`) whose video is also in it. Without Qt the build is about 50 MB smaller.
 
 The check asks a judge model (`qwen3.5:9b`, temperature 0) which neighbouring Japanese line each
 English line actually translates. Runs of two or more lines pointing away from their own are shifts,
@@ -27,9 +35,8 @@ gap fill are dropped. Audio memory for an hour of speech went from 222 MB to 18 
 bit-identical to a whole-file decode. The echo preset is now checked byte for byte against jp-subs as
 well, and `.gitattributes` keeps LF line endings in the repo and the working copy.
 
-The window now follows Windows' light or dark mode. In dark mode it used to paint light backgrounds
-under Qt's white text, so the settings, buttons and drop-down lists were white on white. Colours
-now come from the system palette, and status colours have a light and a dark set. The app build
+Before the rebuild, the Qt window was fixed for dark mode, where it painted light backgrounds under
+white text. The app build
 (`scripts/build_app.py`) keeps PyInstaller's scratch copies of the programs out of `build/`, and
 adds a `README.txt` saying which of the two programs is the app, plus a `Whisper Subtitler.lnk`
 shortcut in the repo folder for opening it.

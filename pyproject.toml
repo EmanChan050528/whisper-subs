@@ -19,8 +19,9 @@ dev = ["pytest>=8", "ruff>=0.6"]
 # not needed: a transcription loads only cublas64_12 and cublasLt64_12, and
 # runs in fp16 and int8 with cuDNN absent (docs/benchmarks.md). Saves 1.3 GB.
 cuda = ["nvidia-cublas-cu12"]
-# The drag-and-drop window. Essentials is the Qt Widgets subset of PySide6.
-gui = ["PySide6-Essentials>=6.7"]
+# The drag-and-drop window: a web page in the system's WebView2 (Edge), which
+# Windows 10 and 11 already have. pywebview 6 matches the title bar to the theme.
+gui = ["pywebview>=6"]
 
 [project.scripts]
 whisper-subs = "whisper_subs.cli:main"
@@ -32,7 +33,7 @@ whisper-subs-gui = "whisper_subs.gui:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-whisper_subs = ["assets/*.png"]
+whisper_subs = ["assets/*.png", "assets/*.ico", "assets/ui/*"]
 
 [tool.ruff]
 line-length = 100

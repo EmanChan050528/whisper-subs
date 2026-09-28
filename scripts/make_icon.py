@@ -2,8 +2,9 @@
 
     python scripts/make_icon.py
 
-Writes packaging/icon.ico (every size Windows asks for) and
-src/whisper_subs/assets/icon.png (the window icon). The lettering is Noto Sans
+Writes icon.ico (every size Windows asks for) to packaging/, for the .exe
+files, and to src/whisper_subs/assets/, for the window; and
+src/whisper_subs/assets/icon.png, shown in the window's header. The lettering is Noto Sans
 JP Bold, SIL Open Font License 1.1, fetched from google/fonts into build/fonts
 on first run so the 9.6 MB font never goes into git.
 """
@@ -59,8 +60,11 @@ def main() -> None:
     im = draw()
     ico = ROOT / "packaging" / "icon.ico"
     im.resize((256, 256), Image.LANCZOS).save(ico, sizes=[(s, s) for s in ICO_SIZES])
-    png = ROOT / "src" / "whisper_subs" / "assets" / "icon.png"
-    png.parent.mkdir(parents=True, exist_ok=True)
+    assets = ROOT / "src" / "whisper_subs" / "assets"
+    assets.mkdir(parents=True, exist_ok=True)
+    im.resize((256, 256), Image.LANCZOS).save(assets / "icon.ico",
+                                              sizes=[(s, s) for s in ICO_SIZES])
+    png = assets / "icon.png"
     im.resize((256, 256), Image.LANCZOS).save(png)
     preview = Image.new("RGB", (560, 300), (250, 250, 250))
     preview.paste(im.resize((256, 256), Image.LANCZOS), (20, 20), im.resize((256, 256)))
@@ -70,7 +74,7 @@ def main() -> None:
         preview.paste(small, (x, 150 - s // 2), small)
         x += s + 30
     preview.save(ROOT / "build" / "icon_preview.png")
-    print(f"{ico}\n{png}")
+    print(f"{ico}\n{assets / 'icon.ico'}\n{png}")
 
 
 if __name__ == "__main__":

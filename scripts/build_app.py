@@ -36,9 +36,11 @@ Before the first run
   - Install Ollama (https://ollama.com) and run:  ollama pull qwen3.5:9b
   - The first transcription downloads the Whisper model (about 3 GB).
   - An NVIDIA graphics card makes it much faster; without one it still works.
+  - The window uses Microsoft Edge WebView2, which Windows 10 and 11 include.
 
 Subtitles are saved next to each video: .en.srt (English), .ja.srt
-(Japanese) and, if chosen, .ja-en.srt (both). Stop pauses; Start carries on.
+(Japanese) and, if chosen, .ja-en.srt (both). Pause stops after the current
+step; Resume carries on.
 
 https://github.com/EmanChan050528/whisper-subs
 """

@@ -53,16 +53,15 @@ cublas = [(str(dll), "nvidia/cublas/bin") for dll in (site / "nvidia" / "cublas"
 
 binaries = cublas + collect_dynamic_libs("ctranslate2") + collect_dynamic_libs("av")
 datas = collect_data_files("faster_whisper")  # the Silero VAD model
-datas += [(str(here.parent / "src" / "whisper_subs" / "assets" / "icon.png"),
-           "whisper_subs/assets")]  # the window icon
+assets = here.parent / "src" / "whisper_subs" / "assets"
+datas += [(str(assets / "icon.ico"), "whisper_subs/assets"),  # the title bar's icon
+          (str(assets / "icon.png"), "whisper_subs/assets"),  # the header's
+          (str(assets / "ui"), "whisper_subs/assets/ui")]  # the window itself
 
-# Qt modules the window does not use; PySide6-Essentials still ships them.
-excludes = [
-    "PySide6.QtNetwork", "PySide6.QtQml", "PySide6.QtQuick", "PySide6.QtSql",
-    "PySide6.QtTest", "PySide6.QtXml", "PySide6.QtOpenGL", "PySide6.QtPdf",
-    "PySide6.QtConcurrent", "PySide6.QtDBus", "PySide6.QtHelp", "PySide6.QtDesigner",
-    "tkinter", "matplotlib", "pytest", "IPython",
-]
+# The window is WebView2 through pywebview (its PyInstaller hook brings the
+# WebView2 loader and pythonnet). Qt is left out in case it is still installed
+# from the first version of the window.
+excludes = ["PySide6", "shiboken6", "tkinter", "matplotlib", "pytest", "IPython"]
 
 common = dict(
     binaries=binaries,

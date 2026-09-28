@@ -1,0 +1,563 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Whisper Subtitler</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f5f5f7; --panel: #ffffff; --card: #ffffff; --sunk: #eeeef2;
+  --line: rgba(20, 20, 40, .09); --line-strong: rgba(20, 20, 40, .18);
+  --text: #1b1b1f; --muted: #6b6b76; --faint: #9c9ca6;
+  --accent: #5b54e8; --accent-2: #8b5cf6; --accent-soft: rgba(91, 84, 232, .10);
+  --ok: #16934f; --ok-soft: rgba(22, 147, 79, .11);
+  --warn: #b86e00; --warn-soft: rgba(184, 110, 0, .12);
+  --bad: #d12f2f; --bad-soft: rgba(209, 47, 47, .10);
+  --shadow: 0 1px 2px rgba(20, 20, 40, .05), 0 4px 16px rgba(20, 20, 40, .05);
+  --radius: 12px;
+  --ease: cubic-bezier(.2, .8, .2, 1);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141417; --panel: #1b1b20; --card: #202026; --sunk: #16161a;
+    --line: rgba(255, 255, 255, .07); --line-strong: rgba(255, 255, 255, .15);
+    --text: #ececf1; --muted: #a0a0ad; --faint: #6c6c78;
+    --accent: #8580ff; --accent-2: #a78bfa; --accent-soft: rgba(133, 128, 255, .14);
+    --ok: #4ade80; --ok-soft: rgba(74, 222, 128, .12);
+    --warn: #fbbf24; --warn-soft: rgba(251, 191, 36, .12);
+    --bad: #f87171; --bad-soft: rgba(248, 113, 113, .12);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 6px 20px rgba(0, 0, 0, .25);
+  }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--text); overflow: hidden;
+  font: 14px/1.45 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  display: flex; flex-direction: column; user-select: none; -webkit-font-smoothing: antialiased;
+}
+button, input { font: inherit; color: inherit; }
+.i { width: 18px; height: 18px; flex: none; }
+
+/* header */
+header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; }
+.mark { width: 30px; height: 30px; }
+h1 { font-size: 15px; font-weight: 600; margin: 0; letter-spacing: -.01em; }
+#version { color: var(--faint); font-size: 12px; }
+.spacer { flex: 1; }
+.pill {
+  display: inline-flex; align-items: center; gap: 6px; padding: 4px 11px 4px 9px; border-radius: 99px;
+  font-size: 12px; background: var(--ok-soft); color: var(--ok); cursor: default; position: relative;
+}
+.pill .i { width: 15px; height: 15px; }
+.pill.bad { background: var(--warn-soft); color: var(--warn); }
+.pill .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.icon-btn {
+  border: 0; background: transparent; color: var(--muted); width: 30px; height: 30px; border-radius: 8px;
+  display: grid; place-items: center; cursor: pointer; transition: background .15s, color .15s;
+}
+.icon-btn:hover { background: var(--sunk); color: var(--text); }
+.icon-btn .i { width: 16px; height: 16px; }
+[data-tip]:hover::after {
+  content: attr(data-tip); position: absolute; top: calc(100% + 8px); right: 0; z-index: 20;
+  width: max-content; max-width: 280px; padding: 7px 10px; border-radius: 8px; font-size: 12px;
+  background: var(--card); color: var(--text); border: 1px solid var(--line-strong); box-shadow: var(--shadow);
+  white-space: normal; pointer-events: none;
+}
+
+/* layout */
+main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px;
+       padding: 0 20px 20px; }
+.work { min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.panel {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; min-height: 0;
+}
+
+/* drop zone */
+#drop {
+  flex: 1; min-height: 120px; border: 1.5px dashed var(--line-strong); border-radius: 16px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  color: var(--muted); cursor: pointer; background: var(--panel);
+  transition: flex .45s var(--ease), min-height .45s var(--ease), padding .3s, border-color .2s, background .2s;
+}
+#drop:hover { border-color: var(--accent); background: var(--accent-soft); }
+#drop .big { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center;
+             background: var(--accent-soft); color: var(--accent); transition: all .3s var(--ease); }
+#drop .big .i { width: 24px; height: 24px; }
+#drop strong { color: var(--text); font-size: 16px; font-weight: 600; }
+#drop .sub { font-size: 13px; }
+#drop .sub u { color: var(--accent); text-decoration: none; }
+#drop kbd { font: 11px "Segoe UI", sans-serif; padding: 1px 5px; border-radius: 4px; border: 1px solid var(--line-strong); }
+body.has-files #drop { flex: 0 0 auto; min-height: 58px; flex-direction: row; padding: 0 16px; gap: 12px; }
+body.has-files #drop .big { width: 32px; height: 32px; border-radius: 10px; }
+body.has-files #drop .big .i { width: 18px; height: 18px; }
+body.has-files #drop strong { font-size: 14px; }
+.drop-text { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+body.has-files .drop-text { flex-direction: row; gap: 8px; align-items: baseline; }
+
+/* queue */
+.list-head { display: none; align-items: center; gap: 8px; padding: 0 4px; color: var(--muted); font-size: 12px;
+             text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+body.has-files .list-head { display: flex; }
+.link { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 12px; padding: 2px 6px;
+        border-radius: 6px; text-transform: none; letter-spacing: 0; font-weight: 500; }
+.link:hover { color: var(--text); background: var(--sunk); }
+#files { list-style: none; margin: 0; padding: 0 2px 2px; display: flex; flex-direction: column; gap: 8px;
+         overflow-y: auto; min-height: 0; flex: 1; }
+body:not(.has-files) #files { display: none; }
+.file {
+  display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; background: var(--card);
+  border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow);
+  animation: pop .35s var(--ease) both; transition: border-color .25s, opacity .25s;
+}
+.file.leaving { animation: out .22s ease forwards; }
+@keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.985); } }
+@keyframes out { to { opacity: 0; transform: translateX(12px); } }
+.file.s-Running { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.kind { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex: none;
+        background: var(--sunk); color: var(--muted); }
+.s-Running .kind { background: var(--accent-soft); color: var(--accent); }
+.s-Done .kind { background: var(--ok-soft); color: var(--ok); }
+.s-Error .kind { background: var(--bad-soft); color: var(--bad); }
+.s-Paused .kind { background: var(--warn-soft); color: var(--warn); }
+.body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.row1 { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+.badge { font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 5px; color: var(--faint);
+         white-space: nowrap; }
+.badge .i { width: 14px; height: 14px; }
+.s-Running .badge { color: var(--accent); }
+.s-Done .badge { color: var(--ok); }
+.s-Error .badge { color: var(--bad); }
+.s-Paused .badge { color: var(--warn); }
+.detail { font-size: 12.5px; color: var(--muted); overflow-wrap: anywhere; }
+.detail:empty { display: none; }
+.s-Error .detail { color: var(--bad); }
+.bar { height: 5px; border-radius: 3px; background: var(--sunk); overflow: hidden; margin-top: 4px; display: none; }
+.s-Running .bar { display: block; }
+.bar i { display: block; height: 100%; width: 0; border-radius: 3px;
+         background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .5s var(--ease); }
+.bar.busy i { width: 35% !important; animation: slide 1.3s ease-in-out infinite; }
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(300%); } }
+.steps { display: none; gap: 6px; margin-top: 2px; font-size: 11.5px; color: var(--faint); align-items: center; }
+.s-Running .steps { display: flex; }
+.step { display: inline-flex; align-items: center; gap: 4px; }
+.step .i { width: 13px; height: 13px; }
+.step.now { color: var(--accent); font-weight: 600; }
+.step.past { color: var(--ok); }
+.outs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.outs:empty { display: none; }
+.chip { border: 1px solid var(--line); background: var(--sunk); border-radius: 6px; padding: 1px 8px; font-size: 12px;
+        cursor: pointer; color: var(--muted); font-family: "Cascadia Mono", Consolas, monospace; transition: all .15s; }
+.chip:hover { color: var(--accent); border-color: var(--accent); }
+.acts { display: flex; gap: 2px; opacity: 0; transition: opacity .15s; }
+.file:hover .acts { opacity: 1; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* log */
+#logbox { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); flex: none; }
+#logbox summary { list-style: none; cursor: pointer; padding: 9px 14px; display: flex; align-items: center; gap: 8px;
+                  color: var(--muted); font-size: 12.5px; font-weight: 500; }
+#logbox summary::-webkit-details-marker { display: none; }
+#logbox summary .chev { transition: transform .2s; width: 14px; height: 14px; }
+#logbox[open] summary .chev { transform: rotate(90deg); }
+#logbox .last { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--faint);
+                font-weight: 400; font-family: "Cascadia Mono", Consolas, monospace; font-size: 12px; }
+#logbox[open] .last { visibility: hidden; }
+#log { margin: 0; padding: 4px 14px 12px; height: 190px; overflow: auto; user-select: text; white-space: pre-wrap;
+       font: 12px/1.55 "Cascadia Mono", Consolas, "Yu Gothic UI", monospace; color: var(--muted); }
+#log .h { color: var(--text); font-weight: 600; }
+#log .e { color: var(--bad); }
+#log .w { color: var(--ok); }
+.alert-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--bad); display: none; }
+#logbox.has-error .alert-dot { display: block; }
+
+/* settings panel */
+.panel h2 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0;
+            padding: 16px 18px 4px; font-weight: 600; }
+fieldset { border: 0; margin: 0; padding: 6px 18px 12px; display: flex; flex-direction: column; gap: 14px;
+           overflow-y: auto; min-height: 0; flex: 1; }
+fieldset:disabled { opacity: .55; }
+.field { display: flex; flex-direction: column; gap: 6px; transition: opacity .2s; }
+.field.off { opacity: .4; pointer-events: none; }
+label.cap { font-size: 12.5px; color: var(--muted); font-weight: 500; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--sunk); border-radius: 10px; padding: 3px;
+       position: relative; }
+.seg button { border: 0; background: none; padding: 6px 4px; border-radius: 8px; cursor: pointer; position: relative; z-index: 1;
+              display: flex; flex-direction: column; align-items: center; line-height: 1.2; color: var(--muted);
+              transition: color .2s; }
+.seg button small { font-size: 10.5px; color: var(--faint); }
+.seg button.on { color: var(--text); font-weight: 600; }
+.seg .thumb { position: absolute; top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); border-radius: 8px;
+              background: var(--card); box-shadow: var(--shadow); transition: transform .3s var(--ease); }
+.seg.right .thumb { transform: translateX(100%); }
+.input { display: flex; align-items: center; background: var(--sunk); border: 1px solid transparent; border-radius: 10px;
+         transition: border-color .15s, background .15s; }
+.input:focus-within { border-color: var(--accent); background: var(--card); }
+.input input { flex: 1; min-width: 0; border: 0; background: none; outline: 0; padding: 8px 11px; }
+.input input::placeholder { color: var(--faint); }
+.input .icon-btn { width: 28px; height: 28px; margin-right: 3px; }
+.toggle { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.toggle span { flex: 1; }
+.toggle small { display: block; color: var(--faint); font-size: 11.5px; line-height: 1.35; }
+.toggle input { appearance: none; width: 36px; height: 21px; border-radius: 99px; background: var(--line-strong); flex: none;
+                position: relative; cursor: pointer; transition: background .2s; margin: 0; }
+.toggle input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 15px; height: 15px; border-radius: 50%;
+                       background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .25s var(--ease); }
+.toggle input:checked { background: var(--accent); }
+.toggle input:checked::after { transform: translateX(15px); }
+.toggle input:focus-visible, .seg button:focus-visible, .go:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2px 0; }
+
+.run { padding: 14px 18px 18px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+#status { font-size: 12.5px; color: var(--muted); min-height: 18px; }
+.overall { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--faint); }
+.overall .bar { display: block; flex: 1; margin: 0; }
+.go {
+  border: 0; border-radius: 11px; padding: 11px; font-weight: 600; font-size: 14.5px; cursor: pointer; color: #fff;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2)); box-shadow: 0 4px 14px rgba(91, 84, 232, .35);
+  transition: transform .12s, box-shadow .2s, filter .2s, background .3s;
+}
+.go:hover { filter: brightness(1.08); box-shadow: 0 6px 18px rgba(91, 84, 232, .45); }
+.go:active { transform: scale(.98); }
+.go.pause { background: var(--sunk); color: var(--text); box-shadow: none; border: 1px solid var(--line-strong); }
+.go:disabled { opacity: .55; cursor: default; filter: none; }
+
+/* full-window drop target while dragging */
+#veil { position: fixed; inset: 10px; border-radius: 20px; border: 2px dashed var(--accent); z-index: 50;
+        background: color-mix(in srgb, var(--bg) 82%, transparent); backdrop-filter: blur(6px);
+        display: grid; place-items: center; opacity: 0; pointer-events: none; transition: opacity .15s; }
+#veil div { display: flex; flex-direction: column; align-items: center; gap: 10px; font-size: 18px; font-weight: 600;
+            color: var(--accent); transform: scale(.96); transition: transform .25s var(--ease); }
+#veil .i { width: 40px; height: 40px; }
+body.dragging #veil { opacity: 1; }
+body.dragging #veil div { transform: none; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 99px; border: 3px solid transparent; background-clip: padding-box; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+<header>
+  <img class="mark" src="../icon.png" alt="">
+  <h1>Whisper Subtitler</h1><span id="version"></span>
+  <span class="spacer"></span>
+  <div id="health" style="display:flex;gap:8px"></div>
+  <button class="icon-btn" id="recheck" title="Check again" aria-label="Check again"></button>
+</header>
+
+<main>
+  <section class="work">
+    <div id="drop" role="button" tabindex="0" aria-label="Add files">
+      <div class="big" data-icon="upload"></div>
+      <div class="drop-text">
+        <strong>Drop videos, audio or folders</strong>
+        <span class="sub">or <u>browse</u> · <kbd>Ctrl</kbd> <kbd>O</kbd></span>
+      </div>
+    </div>
+    <div class="list-head">
+      <span id="count">Queue</span><span class="spacer"></span>
+      <button class="link" id="clear">Clear finished</button>
+    </div>
+    <ul id="files"></ul>
+    <details id="logbox">
+      <summary><span data-icon="chevron" class="chevwrap"></span>Log<span class="alert-dot"></span><span class="last" id="last"></span></summary>
+      <pre id="log"></pre>
+    </details>
+  </section>
+
+  <aside class="panel">
+    <h2>Settings</h2>
+    <fieldset id="settings">
+      <div class="field">
+        <label class="cap">Transcription</label>
+        <div class="seg" id="whisper"><div class="thumb"></div></div>
+      </div>
+      <div class="field" data-needs-llm>
+        <label class="cap" for="llm">Translation model</label>
+        <div class="input"><input id="llm" list="models" spellcheck="false" placeholder="qwen3.5:9b"></div>
+        <datalist id="models"></datalist>
+      </div>
+      <div class="field" data-needs-llm>
+        <label class="cap" for="glossary">Series glossary</label>
+        <div class="input">
+          <input id="glossary" list="glossaries" spellcheck="false" placeholder="None, or type a series name">
+          <button type="button" class="icon-btn" id="glossaries-open" title="Open the glossary folder. Fix a name in its .json file and every later file keeps the fix." aria-label="Open glossary folder"></button>
+        </div>
+        <datalist id="glossaries"></datalist>
+      </div>
+      <hr>
+      <label class="toggle" data-needs-llm><span>Bilingual file<small>Japanese above English, as .ja-en.srt</small></span><input type="checkbox" id="bilingual"></label>
+      <label class="toggle" data-needs-llm><span>Self-check<small>Find lines translated onto the wrong subtitle and fix them. Slower.</small></span><input type="checkbox" id="check"></label>
+      <label class="toggle"><span>Japanese only<small>Skip translation. Ollama isn't needed.</small></span><input type="checkbox" id="ja_only"></label>
+    </fieldset>
+    <div class="run">
+      <div class="overall" id="overall" hidden><div class="bar"><i></i></div><span id="overall-text"></span></div>
+      <div id="status">Add some files to begin.</div>
+      <button class="go" id="go"></button>
+    </div>
+  </aside>
+</main>
+
+<div id="veil"><div><span data-icon="upload"></span>Drop to add</div></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+// Icon outlines after Lucide (ISC licence).
+const ICONS = {
+  upload: '<path d="M4 14.9A7 7 0 1 1 15.7 8h1.8a4.5 4.5 0 0 1 2.5 8.2"/><path d="M12 12v9"/><path d="m16 16-4-4-4 4"/>',
+  video: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 7.5h4M3 12h18M3 16.5h4M17 7.5h4M17 16.5h4"/>',
+  audio: '<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>',
+  transcript: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>',
+  alert: '<circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/>',
+  pause: '<rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/>',
+  play: '<path d="M7 4.5v15a1 1 0 0 0 1.5.86l12-7.5a1 1 0 0 0 0-1.72l-12-7.5A1 1 0 0 0 7 4.5z"/>',
+  folder: '<path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
+  cpu: '<rect x="5" y="5" width="14" height="14" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/>',
+  spark: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 17v4M17 19h4"/>',
+  book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V2H6.5A2.5 2.5 0 0 0 4 4.5z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>',
+  refresh: '<path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><path d="M21 3v5h-5"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  loader: '<path d="M21 12a9 9 0 1 1-6.2-8.56"/>',
+  chevron: '<path d="m9 18 6-6-6-6"/>',
+};
+const icon = (name, cls = "") =>
+  `<svg class="i ${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
+document.querySelectorAll("[data-icon]").forEach(el => { el.innerHTML = icon(el.dataset.icon, el.dataset.icon === "chevron" ? "chev" : ""); });
+$("#recheck").innerHTML = icon("refresh");
+$("#glossaries-open").innerHTML = icon("book");
+
+let api = null, state = { files: [], running: false }, whisperChoice = null;
+
+// ------------------------------------------------------------- from Python
+window.ui = {
+  on(event, data) {
+    if (event === "state") render(data);
+    else if (event === "log") addLog(data);
+  },
+};
+
+async function boot(a) {
+  api = a;
+  const d = await api.init();
+  $("#version").textContent = "v" + d.version;
+  buildWhisper(d.whisper);
+  fillLists(d.models, d.glossaries);
+  setHealth(d.health);
+  applyPrefs(d.prefs);
+  d.log.forEach(addLog);
+  render(d.state);
+}
+
+// ---------------------------------------------------------------- settings
+function buildWhisper(choices) {
+  const seg = $("#whisper");
+  choices.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.dataset.value = c.value; b.dataset.i = i;
+    b.innerHTML = `<span></span><small></small>`;
+    b.firstChild.textContent = c.label; b.lastChild.textContent = c.hint;
+    b.onclick = () => { setWhisper(c.value); savePrefs(); };
+    seg.appendChild(b);
+  });
+}
+function setWhisper(value) {
+  whisperChoice = value;
+  const buttons = [...$("#whisper").querySelectorAll("button")];
+  buttons.forEach(b => b.classList.toggle("on", b.dataset.value === value));
+  $("#whisper").classList.toggle("right", buttons.findIndex(b => b.dataset.value === value) === 1);
+}
+function fillLists(models, glossaries) {
+  $("#models").replaceChildren(...models.map(m => new Option(m)));
+  $("#glossaries").replaceChildren(...glossaries.map(g => new Option(g)));
+}
+function setHealth(items) {
+  $("#health").replaceChildren(...items.map(h => {
+    const el = document.createElement("span");
+    el.className = "pill" + (h.ok ? "" : " bad");
+    el.innerHTML = icon(h.name === "GPU" ? "cpu" : "spark") + "<span></span>";
+    el.lastChild.textContent = h.text;
+    if (h.hint) el.dataset.tip = h.hint;
+    return el;
+  }));
+}
+function applyPrefs(p) {
+  setWhisper(p.whisper_model);
+  $("#llm").value = p.llm_model;
+  $("#glossary").value = p.glossary;
+  for (const k of ["bilingual", "check", "ja_only"]) $("#" + k).checked = p[k];
+  syncJaOnly();
+}
+function prefs() {
+  return {
+    whisper_model: whisperChoice, llm_model: $("#llm").value.trim(), glossary: $("#glossary").value.trim(),
+    bilingual: $("#bilingual").checked, check: $("#check").checked, ja_only: $("#ja_only").checked,
+  };
+}
+function syncJaOnly() {
+  const off = $("#ja_only").checked;
+  document.querySelectorAll("[data-needs-llm]").forEach(el => el.classList.toggle("off", off));
+}
+let saveTimer;
+function savePrefs() { clearTimeout(saveTimer); saveTimer = setTimeout(() => api && api.save_prefs(prefs()), 250); }
+for (const id of ["llm", "glossary"]) $("#" + id).addEventListener("input", savePrefs);
+for (const id of ["bilingual", "check", "ja_only"]) $("#" + id).addEventListener("change", () => { syncJaOnly(); savePrefs(); });
+
+// -------------------------------------------------------------------- queue
+const STAGES = [["transcribe", "Transcribe"], ["translate", "Translate"]];
+const BADGE = { Waiting: ["clock", "Waiting"], Running: ["loader", ""], Done: ["check", "Done"],
+                Paused: ["pause", "Paused"], Error: ["alert", "Error"] };
+
+function render(s) {
+  state = s;
+  document.body.classList.toggle("has-files", s.files.length > 0);
+  const list = $("#files");
+  const byPath = new Map([...list.children].filter(li => !li.classList.contains("leaving")).map(li => [li.dataset.path, li]));
+  s.files.forEach((f, i) => {
+    let li = byPath.get(f.path);
+    if (!li) li = makeRow(f);
+    byPath.delete(f.path);
+    updateRow(li, f);
+    if (list.children[i] !== li) list.insertBefore(li, list.children[i] || null);
+  });
+  for (const li of byPath.values()) {  // gone: slide out, then remove
+    li.classList.add("leaving");
+    li.addEventListener("animationend", () => li.remove(), { once: true });
+  }
+  const waiting = s.files.filter(f => f.status !== "Done").length;
+  $("#count").textContent = `Queue · ${s.files.length}`;
+  $("#clear").style.visibility = s.done ? "visible" : "hidden";
+  $("#status").textContent = s.status;
+  $("#settings").disabled = s.running;
+
+  const go = $("#go");
+  const paused = s.files.some(f => f.status === "Paused");
+  if (s.running) {
+    go.className = "go pause"; go.disabled = s.stopping;
+    go.innerHTML = s.stopping ? icon("loader", "spin") + "Pausing…" : icon("pause") + "Pause";
+  } else {
+    go.className = "go"; go.disabled = false;
+    go.innerHTML = icon("play") + (paused ? "Resume" : waiting ? `Start${waiting > 1 ? " " + waiting + " files" : ""}` : "Start");
+  }
+  const running = s.files.find(f => f.status === "Running");
+  const frac = s.total ? (s.done + (running && running.percent != null ? stageFrac(running) : 0)) / s.total : 0;
+  $("#overall").hidden = !(s.running || (s.done && s.total));
+  $("#overall .bar i").style.width = `${Math.round(frac * 100)}%`;
+  $("#overall-text").textContent = `${s.done} / ${s.total}`;
+}
+function stageFrac(f) {  // transcription and translation take roughly equal time
+  const i = STAGES.findIndex(([k]) => k === f.stage);
+  return Math.max(0, (i + f.percent / 100) / STAGES.length);
+}
+function makeRow(f) {
+  const li = document.createElement("li");
+  li.dataset.path = f.path;
+  li.innerHTML = `
+    <div class="kind">${icon(f.kind)}</div>
+    <div class="body">
+      <div class="row1"><span class="name"></span><span class="badge"></span></div>
+      <div class="steps"></div>
+      <div class="bar"><i></i></div>
+      <div class="detail"></div>
+      <div class="outs"></div>
+    </div>
+    <div class="acts">
+      <button class="icon-btn reveal" title="Show in folder" aria-label="Show in folder">${icon("folder")}</button>
+      <button class="icon-btn remove" title="Remove from the list" aria-label="Remove">${icon("x")}</button>
+    </div>`;
+  li.querySelector(".name").textContent = f.name;
+  li.querySelector(".name").title = f.path;
+  li.querySelector(".reveal").onclick = () => api.reveal(li._outs && li._outs[0] || f.path);
+  li.querySelector(".remove").onclick = () => api.remove(f.path);
+  return li;
+}
+function updateRow(li, f) {
+  li.className = `file s-${f.status}`;
+  const [ic, label] = BADGE[f.status];
+  const badge = li.querySelector(".badge");
+  const text = f.status === "Running" ? (f.stage === "translate" ? "Translating" : "Transcribing") : label;
+  const key = f.status + text;
+  if (badge.dataset.key !== key) {
+    badge.dataset.key = key;
+    badge.innerHTML = icon(ic, f.status === "Running" ? "spin" : "") + "<span></span>";
+    badge.lastChild.textContent = text;
+  }
+  li.querySelector(".detail").textContent = f.status === "Running" ? f.detail.replace(/^\w+ ?/, "") : f.detail;
+  const bar = li.querySelector(".bar");
+  bar.classList.toggle("busy", f.percent == null);
+  if (f.percent != null) bar.firstElementChild.style.width = `${f.percent}%`;
+  const now = STAGES.findIndex(([k]) => k === f.stage);
+  li.querySelector(".steps").innerHTML = STAGES.map(([, name], i) =>
+    `<span class="step ${i < now ? "past" : i === now ? "now" : ""}">${i < now ? icon("check") : ""}${name}</span>`
+  ).join('<span>›</span>');
+  li.querySelector(".remove").hidden = f.status === "Running";
+  li.querySelector(".reveal").hidden = !f.outputs.length;
+  const outs = li.querySelector(".outs");
+  if (String(li._outs) !== String(f.outputs)) {
+    li._outs = f.outputs;
+    outs.replaceChildren(...f.outputs.filter(o => o.endsWith(".srt")).map(o => {
+      const b = document.createElement("button");
+      b.className = "chip"; b.title = o;
+      b.textContent = o.slice(o.lastIndexOf(".", o.length - 5));
+      b.onclick = () => api.reveal(o);
+      return b;
+    }));
+  }
+}
+
+// ---------------------------------------------------------------------- log
+const logEl = $("#log");
+function addLog(line) {
+  const atEnd = logEl.scrollHeight - logEl.scrollTop - logEl.clientHeight < 30;
+  const div = document.createElement("div");
+  div.textContent = line;
+  if (line.startsWith("— ")) div.className = "h";
+  else if (/^(error|Traceback)/.test(line)) { div.className = "e"; $("#logbox").classList.add("has-error"); }
+  else if (line.startsWith("  wrote ")) div.className = "w";
+  logEl.appendChild(div);
+  while (logEl.childElementCount > 3000) logEl.firstChild.remove();
+  if (atEnd) logEl.scrollTop = logEl.scrollHeight;
+  $("#last").textContent = line.split("\n")[0];
+}
+$("#logbox").addEventListener("toggle", e => {
+  if (e.target.open) { e.target.classList.remove("has-error"); logEl.scrollTop = logEl.scrollHeight; }
+});
+
+// ------------------------------------------------------------------ actions
+$("#go").onclick = () => state.running ? api.stop() : api.start(prefs());
+$("#clear").onclick = () => api.clear_finished();
+$("#drop").onclick = () => api.browse();
+$("#drop").onkeydown = e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); api.browse(); } };
+$("#glossaries-open").onclick = () => api.open_glossaries();
+$("#recheck").onclick = async () => {
+  $("#recheck").firstChild.classList.add("spin");
+  const d = await api.refresh_health();
+  setHealth(d.health); fillLists(d.models, d.glossaries);
+  $("#recheck").firstChild.classList.remove("spin");
+};
+document.addEventListener("keydown", e => {
+  if (e.ctrlKey && e.key.toLowerCase() === "o") { e.preventDefault(); api.browse(); }
+});
+
+// Dragging files anywhere over the window. Python reads the dropped paths
+// (browsers only get names); the page just shows where to let go.
+let depth = 0;
+const dragging = on => document.body.classList.toggle("dragging", on);
+document.addEventListener("dragenter", e => { e.preventDefault(); depth++; dragging(true); });
+document.addEventListener("dragleave", () => { if (--depth <= 0) { depth = 0; dragging(false); } });
+document.addEventListener("dragover", e => { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; });
+document.addEventListener("drop", e => { e.preventDefault(); depth = 0; dragging(false); });
+
+window.boot = boot;  // lets a preview outside pywebview pass in a stand-in API
+window.addEventListener("pywebviewready", () => boot(window.pywebview.api));
+</script>
+</body>
+</html>

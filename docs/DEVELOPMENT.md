@@ -547,6 +547,42 @@ alignment check (3.1) and overlapping speech (3.7).
 - [ ] Before and after table against a naive per-line translation. The
       nearest thing now is the line-shift table in benchmarks.md.
 
+### 4.4 A modern window (pywebview)
+The Qt window worked but looked like an old utility, and the user asked for a
+newer feel. Three routes were weighed: restyling the widgets, Qt Quick with
+the WinUI 3 style, or a web page in a native window. The web page won
+because it has the most freedom in look and motion, and it drops Qt.
+- [x] **pywebview 6** shows `assets/ui/index.html` in the system's WebView2
+      (Edge), which Windows 10 and 11 already have. The page is plain HTML,
+      CSS and JavaScript, with no build step and no network. Icons are inline
+      SVG after Lucide (ISC).
+- [x] `gui.App` is the Python side, with no window of its own. The page calls
+      its public methods (`init`, `add_paths`, `start`, `stop`, `reveal`, …)
+      and redraws from the snapshot App pushes after every change, throttled
+      to ten a second while progress streams in. The worker is a plain
+      thread around the same `run_job`, so behaviour is unchanged: Stop
+      pauses and Start carries on.
+- [x] Layout: a header with GPU and Ollama status pills, a drop zone that
+      shrinks to a bar once files are queued, one card per file (kind icon,
+      stage steps, progress bar, and on success the subtitle files as chips
+      that open Explorer on the file), and a log that folds to its last line.
+      The settings panel has an Accurate/Fast segmented control, switches, and
+      one main button that reads Start, Pause or Resume. Follows light or
+      dark mode live; pywebview matches the title bar.
+- [x] Dropped files: browsers only see file names, so paths come through
+      pywebview's own DOM drop handler (WebView2 hands it the real paths).
+      Tested with a real OLE drag from another process, for a file and for a
+      folder, from source and in the built app.
+- [x] Settings move from `gui.ini` to `gui.json`. The old INI is read once,
+      so nothing is lost. Dropping a folder skips a `.ja.json` whose video is
+      also there.
+- [x] Tests drive `App` directly with a fake job: no window, no Qt.
+- [x] Real runs of the minute clip from source and in the built app. The
+      demo GIF and screenshot are re-recorded by `scripts/make_demo.py`,
+      which now grabs the real window from the screen.
+- [x] Bundle **1.05 GB** (was 1.1): Qt's 71 MB goes, WebView2's loader and
+      pythonnet come in.
+
 ---
 
 ## Later, if it earns it

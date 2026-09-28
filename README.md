@@ -76,16 +76,21 @@ Leave out `cuda` on a machine without an NVIDIA GPU. It installs cuBLAS as a
 pip wheel, so no CUDA toolkit is needed.
 
 **Standalone build**: `packaging/whisper-subs.spec` builds a folder with both
-programs and no Python required (about 1.1 GB, mostly cuBLAS). See
+programs and no Python required (about 1 GB, mostly cuBLAS). See
 [Building](#building).
+
+The window runs in Microsoft Edge WebView2, which Windows 10 and 11 already
+include.
 
 The first run downloads the Whisper model (large-v3, 2.9 GB).
 
 ## Use
 
 **The window:** run `whisper-subs-gui`, or `Whisper Subtitler.exe` in a
-build. Drop in files or whole folders, press **Start**, and the subtitles
-appear next to each file. **Stop** pauses; **Start** carries on from there.
+build. Drop files or whole folders anywhere on it, press **Start**, and the
+subtitles appear next to each file. Click a finished file's subtitles to see
+them in Explorer. **Pause** stops after the current step, and **Resume**
+carries on from there.
 
 ![The window after a run](docs/screenshot.png)
 

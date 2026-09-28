@@ -27,6 +27,13 @@ gap fill are dropped. Audio memory for an hour of speech went from 222 MB to 18 
 bit-identical to a whole-file decode. The echo preset is now checked byte for byte against jp-subs as
 well, and `.gitattributes` keeps LF line endings in the repo and the working copy.
 
+The window now follows Windows' light or dark mode. In dark mode it used to paint light backgrounds
+under Qt's white text, so the settings, buttons and drop-down lists were white on white. Colours
+now come from the system palette, and status colours have a light and a dark set. The app build
+(`scripts/build_app.py`) keeps PyInstaller's scratch copies of the programs out of `build/`, and
+adds a `README.txt` saying which of the two programs is the app, plus a `Whisper Subtitler.lnk`
+shortcut in the repo folder for opening it.
+
 ## 0.1.0 — desktop app
 
 A drag-and-drop window for anyone who would rather not use a terminal, and a standalone Windows build that

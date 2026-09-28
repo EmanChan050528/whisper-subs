@@ -124,11 +124,18 @@ it there. Existing entries always win when a new file's findings are merged in.
 
 ```bash
 .venv/Scripts/python -m pip install -e ".[gui,cuda]" pyinstaller
-.venv/Scripts/pyinstaller packaging/whisper-subs.spec --noconfirm
+.venv/Scripts/python scripts/build_app.py
 ```
 
-This produces `dist/whisper-subs/` with `Whisper Subtitler.exe` and
-`whisper-subs.exe`. Only cuBLAS is bundled from CUDA. A transcription never
+This produces `dist/whisper-subs/`. `Whisper Subtitler.exe` is the app, and
+`whisper-subs.exe` is the same pipeline for the command line. They share the
+`_internal` folder, and a `README.txt` beside them says which is which.
+PyInstaller's scratch files go to the temp folder, not `build/`.
+
+The script also puts a **`Whisper Subtitler.lnk` shortcut in the repo folder**,
+so the app opens from there. It's a shortcut rather than a copy because the
+program only runs next to its `_internal` folder. It holds this machine's path,
+so it isn't committed; each build makes its own. Only cuBLAS is bundled from CUDA. A transcription never
 loads cuDNN, which saves 1.3 GB.
 
 ## Development

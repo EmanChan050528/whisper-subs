@@ -11,8 +11,8 @@ import threading
 import traceback
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QSettings, Qt, QThread, Signal
-from PySide6.QtGui import QColor, QDragEnterEvent, QDropEvent, QFont, QIcon
+from PySide6.QtCore import QEvent, QObject, QSettings, Qt, QThread, Signal
+from PySide6.QtGui import QColor, QDragEnterEvent, QDropEvent, QFont, QIcon, QPalette
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -45,7 +45,12 @@ WHISPER_CHOICES = [(f"{DEFAULT_MODEL}  (accurate)", DEFAULT_MODEL),
                    (f"{FAST_MODEL}  (about 4x faster)", FAST_MODEL)]
 
 WAITING, RUNNING, DONE, PAUSED, FAILED = "Waiting", "Running", "Done", "Paused", "Error"
-STATUS_COLOURS = {DONE: "#2e7d32", PAUSED: "#b26a00", FAILED: "#c62828"}
+# Status colours per theme: the light set is unreadable on a dark list and
+# the other way round. Waiting and Running use the theme's own text colour.
+STATUS_COLOURS = {
+    "light": {DONE: "#2e7d32", PAUSED: "#b26a00", FAILED: "#c62828"},
+    "dark": {DONE: "#81c784", PAUSED: "#ffb74d", FAILED: "#ef9a9a"},
+}
 
 
 class Worker(QObject):
@@ -244,7 +249,7 @@ class MainWindow(QMainWindow):
         central = QWidget()
         central.setLayout(root)
         self.setCentralWidget(central)
-        self.setStyleSheet(STYLE)
+        self._apply_style()
 
         self.load_prefs()
         self.check_health()
@@ -342,7 +347,33 @@ class MainWindow(QMainWindow):
         name = Path(item.data(Qt.ItemDataRole.UserRole)).name
         item.setData(Qt.ItemDataRole.UserRole + 1, status)
         item.setText(f"{status:<10}{name}" + (f"   — {detail}" if detail else ""))
-        item.setForeground(QColor(STATUS_COLOURS.get(status, "#222222")))
+        colour = STATUS_COLOURS[self._theme()].get(status)
+        if colour:
+            item.setForeground(QColor(colour))
+        else:
+            item.setData(Qt.ItemDataRole.ForegroundRole, None)  # the theme's text colour
+
+    def _apply_style(self) -> None:
+        # palette(mid) makes the drop zone's dashed border vanish on dark.
+        border = {"dark": "#7a7a7a", "light": "#9e9e9e"}[self._theme()]
+        self.setStyleSheet(STYLE % {"drop_border": border})
+
+    def _theme(self) -> str:
+        """Windows' app theme, as Qt reports it through the palette."""
+        return "dark" if self.palette().color(QPalette.ColorRole.Window).lightness() < 128 \
+            else "light"
+
+    def changeEvent(self, event) -> None:
+        # Switching Windows between light and dark while the app is open.
+        if event.type() in (QEvent.Type.PaletteChange, QEvent.Type.ApplicationPaletteChange):
+            if hasattr(self, "queue"):  # not during construction
+                self._apply_style()
+            for i in range(self.queue.count() if hasattr(self, "queue") else 0):
+                item = self.queue.item(i)
+                colour = STATUS_COLOURS[self._theme()].get(item.data(Qt.ItemDataRole.UserRole + 1))
+                if colour:
+                    item.setForeground(QColor(colour))
+        super().changeEvent(event)
 
     def _count(self, status: str) -> int:
         return sum(self.queue.item(i).data(Qt.ItemDataRole.UserRole + 1) == status
@@ -463,18 +494,20 @@ def _open(folder: Path) -> None:
         subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", str(folder)])
 
 
+# Colours come from the palette (palette(role)), so the window follows Windows'
+# light or dark mode. The first version hard-coded light backgrounds: in dark
+# mode Qt's white text landed on them and the settings were invisible. Only
+# the accent blue is fixed; it reads on both. Plain buttons are left native.
 STYLE = """
-QMainWindow { background: #fafafa; }
-#drop { border: 2px dashed #9e9e9e; border-radius: 10px; background: #ffffff; }
-#drop[hover="true"] { border-color: #1565c0; background: #e3f2fd; }
-#dropLabel { color: #555555; font-size: 15px; }
-#health { color: #555555; }
-QPushButton { padding: 6px 14px; }
+#drop { border: 2px dashed %(drop_border)s; border-radius: 10px; background: palette(base); }
+#drop[hover="true"] { border-color: #1e88e5; background: rgba(30, 136, 229, 45); }
+#dropLabel { font-size: 15px; }
 QPushButton#primary { background: #1565c0; color: white; border: none; border-radius: 4px;
-                      font-weight: 600; }
-QPushButton#primary:disabled { background: #90a4ae; }
-QProgressBar { border: none; background: #e0e0e0; border-radius: 4px; }
-QProgressBar::chunk { background: #1565c0; border-radius: 4px; }
+                      padding: 6px 18px; font-weight: 600; }
+QPushButton#primary:hover { background: #1976d2; }
+QPushButton#primary:disabled { background: palette(mid); color: palette(window); }
+QProgressBar { border: none; background: palette(mid); border-radius: 4px; }
+QProgressBar::chunk { background: #1e88e5; border-radius: 4px; }
 QListWidget { font-family: Consolas, monospace; }
 """
 

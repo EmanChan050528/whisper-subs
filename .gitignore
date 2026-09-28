@@ -41,3 +41,6 @@ Thumbs.db
 
 # ...but keep the build recipe
 !packaging/*.spec
+
+# The app shortcut scripts/build_app.py makes (holds this machine's path)
+/Whisper Subtitler.lnk

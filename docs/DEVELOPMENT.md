@@ -518,6 +518,21 @@ alignment check (3.1) and overlapping speech (3.7).
       files.
 - [x] Version info on both .exe files (Explorer > Properties > Details),
       read from `__version__`.
+- [x] **Dark mode** (a user report: white text on white in the settings and
+      drop-downs). The stylesheet hard-coded light backgrounds while Windows
+      11 dark mode gave Qt white text. Colours now come from `palette(...)`,
+      plain buttons stay native, queue rows use the theme's text colour, and
+      status colours have light and dark sets, re-applied if Windows switches
+      theme while the app is open. Checked by rendering with the real Windows
+      platform in both schemes, including the opened drop-down lists (the
+      window is shown off-screen so nothing appears on the desktop).
+- [x] `scripts/build_app.py`: PyInstaller's scratch folder goes to temp, so
+      `build/` no longer holds non-working copies of the .exe files. Writes a
+      README.txt into the app folder, and refuses to build while the app is
+      running (Windows locks its files).
+- [x] A `Whisper Subtitler.lnk` shortcut in the repo root, made by the build
+      and gitignored. It isn't a copy of the .exe, which only runs next to
+      `_internal`, and a one-file build would unpack ~1 GB on every launch.
 
 ### 4.3 README and portfolio
 - [x] Rewritten as the project's front page: what it does, how it works,

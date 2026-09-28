@@ -1,6 +1,9 @@
 # PyInstaller build: one folder, two programs sharing one set of libraries.
 #
-#   .venv/Scripts/pyinstaller packaging/whisper-subs.spec --noconfirm
+#   .venv/Scripts/python scripts/build_app.py
+#
+# (which runs this spec with PyInstaller's scratch files in the temp folder,
+# and adds a README.txt beside the programs)
 #
 # -> dist/whisper-subs/Whisper Subtitler.exe   the window
 #    dist/whisper-subs/whisper-subs.exe        the command line

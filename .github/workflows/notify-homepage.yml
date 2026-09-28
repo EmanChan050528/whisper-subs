@@ -1,0 +1,19 @@
+name: Notify homepage of a new release
+
+# Fires the homepage's "Update project updates" workflow the moment a version
+# tag is pushed here, instead of waiting for its own scheduled check (which
+# GitHub only runs on a "best effort" basis and can delay for hours).
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger the homepage's updates workflow
+        env:
+          GH_TOKEN: ${{ secrets.HOMEPAGE_DISPATCH_TOKEN }}
+        run: gh workflow run update-updates.yml --repo EmanChan050528/EmanChan050528.github.io

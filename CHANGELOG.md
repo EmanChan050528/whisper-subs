@@ -9,7 +9,7 @@ Tags are annotated, so `git show 0.1.0` explains why each one is where it is.
 
 ---
 
-## Unreleased — a new window, line-shift check and streaming audio
+## 0.1.1 — a new window, line-shift check and streaming audio
 
 The window has been rebuilt as a modern app, with file cards that show each stage's progress, switches
 instead of checkboxes, and a drop target that covers the whole window. An optional `--check` pass finds
